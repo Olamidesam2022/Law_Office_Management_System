@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { auth } from "../firebase/config.js";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 export function RegisterPage({ onRegister }) {
   const [email, setEmail] = useState("");
@@ -6,7 +8,7 @@ export function RegisterPage({ onRegister }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       setError("Please enter email and password.");
@@ -21,8 +23,21 @@ export function RegisterPage({ onRegister }) {
       setError("Passwords do not match.");
       return;
     }
-    // Simulate registration success
-    onRegister();
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+      onRegister({ uid: user.uid, email: user.email });
+    } catch (err) {
+      if (err.code === "auth/email-already-in-use") {
+        setError("User already exists with this email.");
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+    }
   };
 
   return (

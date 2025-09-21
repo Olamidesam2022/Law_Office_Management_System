@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Users, Plus, Search, Mail, Phone } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function ClientsPage() {
+export function ClientsPage({ user }) {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,8 +16,12 @@ export function ClientsPage() {
   });
 
   useEffect(() => {
-    loadClients();
-  }, []);
+    if (user && user.uid) {
+      firebaseService.setUserId(user.uid);
+      loadClients();
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   const loadClients = async () => {
     try {
@@ -33,7 +37,10 @@ export function ClientsPage() {
 
   const handleAddClient = async () => {
     try {
-      const client = await firebaseService.create("clients", newClient);
+      const client = await firebaseService.create("clients", {
+        ...newClient,
+        userId: user.uid,
+      });
       setClients([...clients, client]);
       setNewClient({
         name: "",

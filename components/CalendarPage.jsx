@@ -2,14 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Calendar, Plus, Clock, User } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function CalendarPage() {
+export function CalendarPage({ user }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    loadAppointments();
-  }, []);
+    if (user && user.uid) {
+      firebaseService.setUserId(user.uid);
+      loadAppointments();
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   const loadAppointments = async () => {
     try {

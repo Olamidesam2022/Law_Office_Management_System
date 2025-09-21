@@ -2,15 +2,19 @@ import React, { useState, useEffect } from "react";
 import { FileText, Plus, Search, Download, Upload } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function DocumentsPage() {
+export function DocumentsPage({ user }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    loadDocuments();
-  }, []);
+    if (user && user.uid) {
+      firebaseService.setUserId(user.uid);
+      loadDocuments();
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   const loadDocuments = async () => {
     try {

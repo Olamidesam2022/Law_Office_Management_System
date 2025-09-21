@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function Dashboard() {
+export function Dashboard({ user }) {
   const [stats, setStats] = useState({
     totalClients: 0,
     activeCases: 0,
@@ -20,8 +20,12 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    if (user && user.uid) {
+      firebaseService.setUserId(user.uid);
+      loadDashboardData();
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   const loadDashboardData = async () => {
     try {

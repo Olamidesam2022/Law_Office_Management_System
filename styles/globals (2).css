@@ -407,3 +407,10 @@ body {
 .modal-footer {
   border-top: 1px solid var(--border-color);
 }
+
+/* Reset navbar margin on mobile */
+@media (max-width: 768px) {
+  .top-navbar {
+    margin-left: 0 !important;
+  }
+}

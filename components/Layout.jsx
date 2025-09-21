@@ -13,63 +13,15 @@ export function Layout({
 
   return (
     <div className="d-flex">
-      {/* Sidebar (desktop) */}
-      <div
-        className={`sidebar-container d-none d-md-block`}
-        style={{
-          width: "250px",
-          background: "#0f172a",
-          color: "white",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          zIndex: 1000,
-        }}
-      >
-        <Sidebar
-          currentPage={currentPage}
-          onPageChange={(page) => {
-            onPageChange(page);
-          }}
-        />
-      </div>
+      {/* Sidebar (desktop + mobile overlay handled inside Sidebar) */}
+      <Sidebar
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-      {/* Sidebar (mobile overlay) */}
-      {sidebarOpen && (
-        <div
-          className="sidebar-overlay d-md-none"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 999,
-          }}
-          onClick={() => setSidebarOpen(false)}
-        >
-          <div
-            style={{
-              width: "250px",
-              background: "#0f172a",
-              color: "white",
-              height: "100%",
-              position: "absolute",
-              top: 0,
-              left: 0,
-              paddingTop: "70px", // below navbar
-            }}
-          >
-            <Sidebar
-              currentPage={currentPage}
-              onPageChange={(page) => {
-                onPageChange(page);
-                setSidebarOpen(false); // close after click
-              }}
-            />
-          </div>
-        </div>
-      )}
-
+      {/* Main content area */}
       <div className="flex-grow-1" style={{ marginLeft: "250px" }}>
         {/* Top Navbar */}
         <TopNavbar

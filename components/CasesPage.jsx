@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Briefcase, Plus, Search, Calendar, User } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function CasesPage() {
+export function CasesPage({ user }) {
   const [cases, setCases] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,8 +20,12 @@ export function CasesPage() {
   });
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (user && user.uid) {
+      firebaseService.setUserId(user.uid);
+      loadData();
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   const loadData = async () => {
     try {
@@ -41,7 +45,10 @@ export function CasesPage() {
 
   const handleAddCase = async () => {
     try {
-      const caseData = await firebaseService.create("cases", newCase);
+      const caseData = await firebaseService.create("cases", {
+        ...newCase,
+        userId: user.uid,
+      });
       setCases([...cases, caseData]);
       setNewCase({
         title: "",

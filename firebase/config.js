@@ -4,12 +4,12 @@ import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBBjCs24oW8S63bp726RIs12yQKk2zjgC0",
-  authDomain: "legal-case-manager-5cc03.firebaseapp.com",
-  projectId: "legal-case-manager-5cc03",
-  storageBucket: "legal-case-manager-5cc03.firebasestorage.app",
-  messagingSenderId: "112261307186",
-  appId: "1:112261307186:web:8d1a12359a81979ed2552b",
+  apiKey: "AIzaSyBQ4lENyTV05WW-7hcnzsAAs-xVqOROiyU",
+  authDomain: "lawmanagementsystem-e7480.firebaseapp.com",
+  projectId: "lawmanagementsystem-e7480",
+  storageBucket: "lawmanagementsystem-e7480.firebasestorage.app",
+  messagingSenderId: "1072314616068",
+  appId: "1:1072314616068:web:01b7bb7a146ba1d01d6851",
 };
 
 // Initialize Firebase

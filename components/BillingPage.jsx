@@ -2,15 +2,19 @@ import React, { useState, useEffect } from "react";
 import { DollarSign, Plus, Search, Eye } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function BillingPage() {
+export function BillingPage({ user }) {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    loadInvoices();
-  }, []);
+    if (user && user.uid) {
+      firebaseService.setUserId(user.uid);
+      loadInvoices();
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   const loadInvoices = async () => {
     try {

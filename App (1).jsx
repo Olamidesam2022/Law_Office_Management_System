@@ -19,17 +19,17 @@ export default function App() {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard user={user} />;
       case "clients":
-        return <ClientsPage />;
+        return <ClientsPage user={user} />;
       case "cases":
-        return <CasesPage />;
+        return <CasesPage user={user} />;
       case "documents":
-        return <DocumentsPage />;
+        return <DocumentsPage user={user} />;
       case "billing":
-        return <BillingPage />;
+        return <BillingPage user={user} />;
       case "calendar":
-        return <CalendarPage />;
+        return <CalendarPage user={user} />;
       default:
         return <Dashboard />;
     }

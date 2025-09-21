@@ -1,17 +1,24 @@
 import React, { useState } from "react";
+import { auth } from "../firebase/config.js";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export function LoginPage({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simple demo: accept any non-empty username/password
-    if (username && password) {
-      onLogin(username);
-    } else {
-      setError("Please enter username and password.");
+    if (!username || !password) {
+      setError("Please enter email and password.");
+      return;
+    }
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, username, password);
+      const user = userCredential.user;
+      onLogin({ uid: user.uid, email: user.email });
+    } catch (err) {
+      setError("Invalid email or password.");
     }
   };
 

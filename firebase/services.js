@@ -19,10 +19,11 @@ export const firebaseService = {
     try {
       const docRef = await addDoc(collection(db, collectionName), {
         ...data,
+        userId: data.userId, // Ensure userId is stored
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      return { id: docRef.id, ...data };
+      return { id: docRef.id, ...data, userId: data.userId };
     } catch (error) {
       console.error("Error creating document:", error);
       throw error;
@@ -32,7 +33,13 @@ export const firebaseService = {
   // Get all documents from a collection
   async getAll(collectionName) {
     try {
-      const querySnapshot = await getDocs(collection(db, collectionName));
+      // Require userId to be set on firebaseService before calling getAll
+      if (!this.userId) throw new Error("userId not set on firebaseService");
+      const q = query(
+        collection(db, collectionName),
+        where("userId", "==", this.userId)
+      );
+      const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -89,9 +96,14 @@ export const firebaseService = {
   // Query documents with conditions
   async query(collectionName, conditions = [], orderByField = null) {
     try {
-      let q = collection(db, collectionName);
+      // Always filter by userId
+      if (!this.userId) throw new Error("userId not set on firebaseService");
+      let q = query(
+        collection(db, collectionName),
+        where("userId", "==", this.userId)
+      );
 
-      // Apply where conditions
+      // Apply additional where conditions
       conditions.forEach((condition) => {
         q = query(
           q,
@@ -113,5 +125,9 @@ export const firebaseService = {
       console.error("Error querying documents:", error);
       throw error;
     }
+  },
+  // Set the current userId for filtering
+  setUserId(userId) {
+    this.userId = userId;
   },
 };
