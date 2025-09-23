@@ -12,121 +12,174 @@ import {
 } from "firebase/firestore";
 import { db } from "./config.js";
 
-// Generic CRUD operations
 export const firebaseService = {
+  userId: null, // keep track of current user
+
   // Create a new document
   async create(collectionName, data) {
-    try {
-      const docRef = await addDoc(collection(db, collectionName), {
-        ...data,
-        userId: data.userId, // Ensure userId is stored
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      return { id: docRef.id, ...data, userId: data.userId };
-    } catch (error) {
-      console.error("Error creating document:", error);
-      throw error;
-    }
+    if (!this.userId) throw new Error("userId not set on firebaseService");
+
+    const docRef = await addDoc(collection(db, collectionName), {
+      ...data,
+      userId: this.userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    return { id: docRef.id, ...data, userId: this.userId };
   },
 
-  // Get all documents from a collection
-  async getAll(collectionName) {
-    try {
-      // Require userId to be set on firebaseService before calling getAll
-      if (!this.userId) throw new Error("userId not set on firebaseService");
-      const q = query(
+  // Get all documents (with optional ordering)
+  async getAll(collectionName, orderByField = null, direction = "asc") {
+    if (!this.userId) throw new Error("userId not set on firebaseService");
+
+    let q = query(
+      collection(db, collectionName),
+      where("userId", "==", this.userId)
+    );
+
+    if (orderByField) {
+      q = query(
         collection(db, collectionName),
-        where("userId", "==", this.userId)
+        where("userId", "==", this.userId),
+        orderBy(orderByField, direction)
       );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-    } catch (error) {
-      console.error("Error getting documents:", error);
-      throw error;
     }
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
   },
 
-  // Get a single document by ID
+  // Get a single document
   async getById(collectionName, id) {
-    try {
-      const docRef = doc(db, collectionName, id);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() };
-      } else {
-        return null;
-      }
-    } catch (error) {
-      console.error("Error getting document:", error);
-      throw error;
-    }
+    const docRef = doc(db, collectionName, id);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
   },
 
-  // Update a document
+  // Update
   async update(collectionName, id, data) {
-    try {
-      const docRef = doc(db, collectionName, id);
-      await updateDoc(docRef, {
-        ...data,
-        updatedAt: new Date(),
-      });
-      return { id, ...data };
-    } catch (error) {
-      console.error("Error updating document:", error);
-      throw error;
-    }
+    const docRef = doc(db, collectionName, id);
+    await updateDoc(docRef, { ...data, updatedAt: new Date() });
+    return { id, ...data };
   },
 
-  // Delete a document
+  // Delete
   async delete(collectionName, id) {
-    try {
-      await deleteDoc(doc(db, collectionName, id));
-      return id;
-    } catch (error) {
-      console.error("Error deleting document:", error);
-      throw error;
-    }
+    await deleteDoc(doc(db, collectionName, id));
+    return id;
   },
 
-  // Query documents with conditions
-  async query(collectionName, conditions = [], orderByField = null) {
+  // Query with conditions
+  async query(
+    collectionName,
+    conditions = [],
+    orderByField = null,
+    direction = "asc"
+  ) {
+    if (!this.userId) throw new Error("userId not set on firebaseService");
+
+    let q = query(
+      collection(db, collectionName),
+      where("userId", "==", this.userId)
+    );
+
+    conditions.forEach((c) => {
+      q = query(q, where(c.field, c.operator, c.value));
+    });
+
+    if (orderByField) {
+      q = query(q, orderBy(orderByField, direction));
+    }
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  },
+
+  // 🔎 Global Search across collections (dynamic fields)
+  async globalSearch(term) {
+    if (!this.userId) throw new Error("userId not set on firebaseService");
+    if (!term || term.trim() === "") return [];
+
+    const lowerTerm = term.toLowerCase();
+    let results = [];
+
+    // Helper: check all fields in a document
+    const matches = (doc) =>
+      Object.values(doc).join(" ").toLowerCase().includes(lowerTerm);
+
+    // Helper: result formatter
+    const makeResult = (type, label, onNavigate) => ({
+      type,
+      label,
+      onNavigate,
+    });
+
+    // 1. Cases
     try {
-      // Always filter by userId
-      if (!this.userId) throw new Error("userId not set on firebaseService");
-      let q = query(
-        collection(db, collectionName),
-        where("userId", "==", this.userId)
+      const cases = await this.getAll("cases");
+      results.push(
+        ...cases
+          .filter((c) => matches(c))
+          .map((c) =>
+            makeResult(
+              "Case",
+              `${c.caseNumber || "Case"} - ${c.clientName || "Unknown"}`,
+              () => (window.location.href = `/cases/${c.id}`)
+            )
+          )
       );
-
-      // Apply additional where conditions
-      conditions.forEach((condition) => {
-        q = query(
-          q,
-          where(condition.field, condition.operator, condition.value)
-        );
-      });
-
-      // Apply ordering
-      if (orderByField) {
-        q = query(q, orderBy(orderByField));
-      }
-
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-    } catch (error) {
-      console.error("Error querying documents:", error);
-      throw error;
+    } catch (err) {
+      console.error("Error searching cases:", err);
     }
+
+    // 2. Invoices
+    try {
+      const invoices = await this.getAll("invoices");
+      results.push(
+        ...invoices
+          .filter((i) => matches(i))
+          .map((i) =>
+            makeResult(
+              "Invoice",
+              `${i.invoiceNumber || "Invoice"} - ${i.clientName || "Unknown"}`,
+              () => (window.location.href = `/billing`)
+            )
+          )
+      );
+    } catch (err) {
+      console.error("Error searching invoices:", err);
+    }
+
+    // 3. Appointments
+    try {
+      const appointments = await this.getAll("appointments");
+      results.push(
+        ...appointments
+          .filter((a) => matches(a))
+          .map((a) =>
+            makeResult(
+              "Appointment",
+              `${a.title || "Appointment"} - ${a.clientName || ""} (${
+                a.date || ""
+              })`,
+              () => (window.location.href = `/calendar`)
+            )
+          )
+      );
+    } catch (err) {
+      console.error("Error searching appointments:", err);
+    }
+
+    return results;
   },
-  // Set the current userId for filtering
+
+  // Set current user
   setUserId(userId) {
     this.userId = userId;
   },

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FileText, Plus, Search, Download, Upload } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function DocumentsPage({ user }) {
+export function DocumentsPage({ user, searchQuery = "" }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,6 +15,14 @@ export function DocumentsPage({ user }) {
     }
     // eslint-disable-next-line
   }, [user]);
+
+  // Sync top navbar search into local search input
+  useEffect(() => {
+    try {
+      console.debug("DocumentsPage sync searchQuery ->", searchQuery);
+    } catch (err) {}
+    setSearchTerm(searchQuery || "");
+  }, [searchQuery]);
 
   const loadDocuments = async () => {
     try {

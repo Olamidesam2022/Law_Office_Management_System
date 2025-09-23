@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Briefcase, Plus, Search, Calendar, User } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function CasesPage({ user }) {
+export function CasesPage({ user, searchQuery = "" }) {
   const [cases, setCases] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +26,14 @@ export function CasesPage({ user }) {
     }
     // eslint-disable-next-line
   }, [user]);
+
+  // Sync top navbar search into local search input
+  useEffect(() => {
+    try {
+      console.debug("CasesPage sync searchQuery ->", searchQuery);
+    } catch (err) {}
+    setSearchTerm(searchQuery || "");
+  }, [searchQuery]);
 
   const loadData = async () => {
     try {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Users, Plus, Search, Mail, Phone } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function ClientsPage({ user }) {
+export function ClientsPage({ user, searchQuery = "" }) {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,6 +22,14 @@ export function ClientsPage({ user }) {
     }
     // eslint-disable-next-line
   }, [user]);
+
+  // Sync top navbar search into local search input
+  useEffect(() => {
+    try {
+      console.debug("ClientsPage sync searchQuery ->", searchQuery);
+    } catch (err) {}
+    setSearchTerm(searchQuery || "");
+  }, [searchQuery]);
 
   const loadClients = async () => {
     try {

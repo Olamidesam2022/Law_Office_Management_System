@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { DollarSign, Plus, Search, Eye } from "lucide-react";
+import { DollarSign, Plus, Search, Eye, Edit, Trash } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-export function BillingPage({ user }) {
+export function BillingPage({ user, searchQuery = "" }) {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
+
+  // Create Invoice form state
+  const [clientName, setClientName] = useState("");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState("");
+  const [status, setStatus] = useState("pending");
+
+  const [errors, setErrors] = useState({});
+  const [highlightedId, setHighlightedId] = useState(null);
+
+  // View modal state
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   useEffect(() => {
     if (user && user.uid) {
@@ -15,6 +28,10 @@ export function BillingPage({ user }) {
     }
     // eslint-disable-next-line
   }, [user]);
+
+  useEffect(() => {
+    setSearchTerm(searchQuery || "");
+  }, [searchQuery]);
 
   const loadInvoices = async () => {
     try {
@@ -25,6 +42,63 @@ export function BillingPage({ user }) {
       console.error("Error loading invoices:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const validateForm = () => {
+    let newErrors = {};
+    if (!clientName.trim()) newErrors.clientName = "Client name is required";
+    if (!invoiceNumber.trim())
+      newErrors.invoiceNumber = "Invoice number is required";
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0)
+      newErrors.amount = "Enter a valid amount";
+    if (!date) newErrors.date = "Date is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSaveInvoice = async () => {
+    if (!validateForm()) return;
+
+    try {
+      const newInvoice = {
+        clientName,
+        invoiceNumber,
+        amount: parseFloat(amount),
+        date,
+        status,
+      };
+
+      const createdInvoice = await firebaseService.create(
+        "invoices",
+        newInvoice
+      );
+      const savedInvoice = { id: createdInvoice.id, ...newInvoice };
+
+      setInvoices((prev) => [savedInvoice, ...prev]);
+      setHighlightedId(createdInvoice.id);
+      setTimeout(() => setHighlightedId(null), 3000);
+
+      setClientName("");
+      setInvoiceNumber("");
+      setAmount("");
+      setDate("");
+      setStatus("pending");
+      setErrors({});
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error saving invoice:", error);
+    }
+  };
+
+  const handleDeleteInvoice = async (id) => {
+    try {
+      await firebaseService.delete("invoices", id);
+      setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+      setSelectedInvoice(null);
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
     }
   };
 
@@ -153,7 +227,12 @@ export function BillingPage({ user }) {
       ) : (
         <div>
           {filteredInvoices.map((invoice) => (
-            <div key={invoice.id} className="custom-card mb-3">
+            <div
+              key={invoice.id}
+              className={`custom-card mb-3 ${
+                highlightedId === invoice.id ? "highlighted-card" : ""
+              }`}
+            >
               <div className="custom-card-body">
                 <div className="row align-items-center">
                   <div className="col-12 col-md-3">
@@ -178,7 +257,10 @@ export function BillingPage({ user }) {
                     </span>
                   </div>
                   <div className="col-12 col-md-3 mt-2 mt-md-0 text-md-end">
-                    <button className="btn btn-outline-primary btn-sm">
+                    <button
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => setSelectedInvoice(invoice)}
+                    >
                       <Eye size={16} className="me-1" />
                       View
                     </button>
@@ -189,16 +271,20 @@ export function BillingPage({ user }) {
           ))}
         </div>
       )}
-      {/* Modal for Creating Invoice */}
+
+      {/* Modal for Create Invoice */}
       <div
         className={`modal fade${showModal ? " show d-block" : ""}`}
         tabIndex="-1"
         role="dialog"
         style={showModal ? { background: "rgba(0,0,0,0.5)" } : {}}
       >
-        <div className="modal-dialog" role="document">
+        <div
+          className="modal-dialog modal-dialog-centered modal-sm"
+          role="document"
+        >
           <div className="modal-content">
-            <div className="modal-header">
+            <div className="modal-header border-bottom">
               <h5 className="modal-title">Create Invoice</h5>
               <button
                 type="button"
@@ -208,39 +294,64 @@ export function BillingPage({ user }) {
               ></button>
             </div>
             <div className="modal-body">
-              {/* Invoice creation form goes here */}
               <form>
                 <div className="mb-3">
                   <label className="form-label">Client Name</label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Enter client name"
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
                   />
+                  {errors.clientName && (
+                    <small className="text-danger">{errors.clientName}</small>
+                  )}
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Invoice Number</label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Enter invoice number"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
                   />
+                  {errors.invoiceNumber && (
+                    <small className="text-danger">
+                      {errors.invoiceNumber}
+                    </small>
+                  )}
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Amount</label>
                   <input
                     type="number"
                     className="form-control"
-                    placeholder="Enter amount"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
                   />
+                  {errors.amount && (
+                    <small className="text-danger">{errors.amount}</small>
+                  )}
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Date</label>
-                  <input type="date" className="form-control" />
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
+                  {errors.date && (
+                    <small className="text-danger">{errors.date}</small>
+                  )}
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Status</label>
-                  <select className="form-select">
+                  <select
+                    className="form-select"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                  >
                     <option value="paid">Paid</option>
                     <option value="pending">Pending</option>
                     <option value="overdue">Overdue</option>
@@ -248,7 +359,7 @@ export function BillingPage({ user }) {
                 </div>
               </form>
             </div>
-            <div className="modal-footer">
+            <div className="modal-footer border-top">
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -256,13 +367,96 @@ export function BillingPage({ user }) {
               >
                 Cancel
               </button>
-              <button type="button" className="btn btn-primary">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleSaveInvoice}
+              >
                 Save Invoice
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal for Viewing Invoice */}
+      {selectedInvoice && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header border-bottom">
+                <h5 className="modal-title">Invoice Details</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Close"
+                  onClick={() => setSelectedInvoice(null)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>Invoice Number:</strong>{" "}
+                  {selectedInvoice.invoiceNumber}
+                </p>
+                <p>
+                  <strong>Client:</strong> {selectedInvoice.clientName}
+                </p>
+                <p>
+                  <strong>Amount:</strong> $
+                  {selectedInvoice.amount?.toLocaleString()}
+                </p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(selectedInvoice.date).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedInvoice.status}
+                </p>
+              </div>
+              <div className="modal-footer border-top d-flex justify-content-between">
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => handleDeleteInvoice(selectedInvoice.id)}
+                >
+                  <Trash size={16} className="me-1" /> Delete
+                </button>
+                <div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary me-2"
+                    onClick={() => setSelectedInvoice(null)}
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => alert("Edit functionality coming soon!")}
+                  >
+                    <Edit size={16} className="me-1" /> Edit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Highlight style */}
+      <style>
+        {`
+          .highlighted-card {
+            background-color: #d1e7dd !important;
+            transition: background-color 2s ease;
+          }
+        `}
+      </style>
     </div>
   );
 }

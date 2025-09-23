@@ -15,21 +15,22 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [user, setUser] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const renderCurrentPage = () => {
     switch (currentPage) {
       case "dashboard":
-        return <Dashboard user={user} />;
+        return <Dashboard user={user} searchQuery={searchQuery} />;
       case "clients":
-        return <ClientsPage user={user} />;
+        return <ClientsPage user={user} searchQuery={searchQuery} />;
       case "cases":
-        return <CasesPage user={user} />;
+        return <CasesPage user={user} searchQuery={searchQuery} />;
       case "documents":
-        return <DocumentsPage user={user} />;
+        return <DocumentsPage user={user} searchQuery={searchQuery} />;
       case "billing":
-        return <BillingPage user={user} />;
+        return <BillingPage user={user} searchQuery={searchQuery} />;
       case "calendar":
-        return <CalendarPage user={user} />;
+        return <CalendarPage user={user} searchQuery={searchQuery} />;
       default:
         return <Dashboard />;
     }
@@ -57,6 +58,9 @@ export default function App() {
       onPageChange={setCurrentPage}
       user={user}
       onLogout={handleLogout}
+      searchQuery={searchQuery}
+      onSearch={setSearchQuery}
+      onSearchSubmit={setSearchQuery}
     >
       {renderCurrentPage()}
     </Layout>
