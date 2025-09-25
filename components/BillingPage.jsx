@@ -418,7 +418,7 @@ export function BillingPage({ user, searchQuery = "" }) {
                   <strong>Status:</strong> {selectedInvoice.status}
                 </p>
               </div>
-              <div className="modal-footer border-top d-flex justify-content-between">
+              <div className="modal-footer border-top">
                 <button
                   type="button"
                   className="btn btn-danger"
@@ -426,22 +426,20 @@ export function BillingPage({ user, searchQuery = "" }) {
                 >
                   <Trash size={16} className="me-1" /> Delete
                 </button>
-                <div>
-                  <button
-                    type="button"
-                    className="btn btn-secondary me-2"
-                    onClick={() => setSelectedInvoice(null)}
-                  >
-                    Close
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => alert("Edit functionality coming soon!")}
-                  >
-                    <Edit size={16} className="me-1" /> Edit
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary me-2"
+                  onClick={() => setSelectedInvoice(null)}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => alert("Edit functionality coming soon!")}
+                >
+                  <Edit size={16} className="me-1" /> Edit
+                </button>
               </div>
             </div>
           </div>

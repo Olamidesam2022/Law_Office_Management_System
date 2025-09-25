@@ -20,18 +20,16 @@ export function Dashboard({ user }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user && user.uid) {
+    if (user?.uid) {
       firebaseService.setUserId(user.uid);
       loadDashboardData();
     }
-    // eslint-disable-next-line
   }, [user]);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
 
-      // Load data from Firebase collections
       const [clients, cases, documents, invoices] = await Promise.all([
         firebaseService.getAll("clients"),
         firebaseService.getAll("cases"),
@@ -39,27 +37,26 @@ export function Dashboard({ user }) {
         firebaseService.getAll("invoices"),
       ]);
 
-      // Calculate stats
       const activeCases = cases.filter(
         (caseItem) => caseItem.status !== "closed"
       ).length;
+
       const monthlyRevenue = invoices
         .filter((invoice) => {
           const invoiceDate = new Date(invoice.date);
-          const currentMonth = new Date().getMonth();
-          const currentYear = new Date().getFullYear();
+          const now = new Date();
           return (
-            invoiceDate.getMonth() === currentMonth &&
-            invoiceDate.getFullYear() === currentYear
+            invoiceDate.getMonth() === now.getMonth() &&
+            invoiceDate.getFullYear() === now.getFullYear()
           );
         })
         .reduce((sum, invoice) => sum + (invoice.amount || 0), 0);
 
       setStats({
         totalClients: clients.length,
-        activeCases: activeCases,
+        activeCases,
         totalDocuments: documents.length,
-        monthlyRevenue: monthlyRevenue,
+        monthlyRevenue,
       });
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -71,19 +68,19 @@ export function Dashboard({ user }) {
   const statCards = [
     {
       title: "Total Clients",
-      value: stats.totalClients,
+      value: stats.totalClients.toLocaleString(),
       icon: Users,
       iconClass: "blue",
     },
     {
       title: "Active Cases",
-      value: stats.activeCases,
+      value: stats.activeCases.toLocaleString(),
       icon: Briefcase,
       iconClass: "green",
     },
     {
       title: "Documents",
-      value: stats.totalDocuments,
+      value: stats.totalDocuments.toLocaleString(),
       icon: FileText,
       iconClass: "purple",
     },
@@ -95,33 +92,9 @@ export function Dashboard({ user }) {
     },
   ];
 
-  if (loading) {
-    return (
-      <div>
-        <div className="mb-4">
-          <h2 className="fw-semibold text-dark">Dashboard</h2>
-          <p className="text-muted">Overview of your law practice</p>
-        </div>
-        <div className="row">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="col-12 col-md-6 col-lg-3 mb-4">
-              <div className="stat-card">
-                <div
-                  className="d-flex justify-content-center align-items-center"
-                  style={{ height: "80px" }}
-                >
-                  <div className="loading-spinner"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div>
+    <div className="container-fluid px-2 px-md-4">
+      {/* Header */}
       <div className="mb-4">
         <h2 className="fw-semibold text-dark">Dashboard</h2>
         <p className="text-muted">Overview of your law practice</p>
@@ -129,30 +102,39 @@ export function Dashboard({ user }) {
 
       {/* Stats Cards */}
       <div className="row mb-4">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
+        {(loading ? [1, 2, 3, 4] : statCards).map((stat, i) => {
+          const Icon = !loading ? stat.icon : null;
           return (
-            <div key={stat.title} className="col-12 col-md-6 col-lg-3 mb-4">
-              <div className="stat-card">
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <div
-                      className="text-muted fw-medium"
-                      style={{ fontSize: "14px" }}
-                    >
-                      {stat.title}
+            <div key={i} className="col-12 col-md-6 col-lg-3 mb-4">
+              <div className="stat-card" style={{ minWidth: "220px" }}>
+                {loading ? (
+                  <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ height: "80px" }}
+                  >
+                    <div className="loading-spinner"></div>
+                  </div>
+                ) : (
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <div
+                        className="text-muted fw-medium"
+                        style={{ fontSize: "14px" }}
+                      >
+                        {stat.title}
+                      </div>
+                      <div
+                        className="fw-semibold text-dark mt-1"
+                        style={{ fontSize: "24px" }}
+                      >
+                        {stat.value}
+                      </div>
                     </div>
-                    <div
-                      className="fw-semibold text-dark mt-1"
-                      style={{ fontSize: "24px" }}
-                    >
-                      {stat.value}
+                    <div className={`stat-icon ${stat.iconClass}`}>
+                      <Icon size={24} />
                     </div>
                   </div>
-                  <div className={`stat-icon ${stat.iconClass}`}>
-                    <Icon size={24} />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           );
@@ -161,8 +143,9 @@ export function Dashboard({ user }) {
 
       {/* Quick Actions */}
       <div className="row">
+        {/* Alerts */}
         <div className="col-12 col-lg-6 mb-4">
-          <div className="custom-card">
+          <div className="custom-card" style={{ minWidth: "260px" }}>
             <div className="custom-card-header">
               <h5 className="mb-0 d-flex align-items-center">
                 <AlertTriangle size={20} color="#f59e0b" className="me-2" />
@@ -181,8 +164,9 @@ export function Dashboard({ user }) {
           </div>
         </div>
 
+        {/* Appointments */}
         <div className="col-12 col-lg-6 mb-4">
-          <div className="custom-card">
+          <div className="custom-card" style={{ minWidth: "260px" }}>
             <div className="custom-card-header">
               <h5 className="mb-0 d-flex align-items-center">
                 <Calendar size={20} color="#2563eb" className="me-2" />
@@ -201,6 +185,17 @@ export function Dashboard({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Responsive tweaks */}
+      <style>
+        {`
+          @media (max-width: 576px) {
+            .stat-card, .custom-card {
+              padding: 0.5rem;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FileText, Plus, Search, Download, Upload } from "lucide-react";
+import { FileText, Upload, Download } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
 export function DocumentsPage({ user, searchQuery = "" }) {
@@ -9,26 +9,22 @@ export function DocumentsPage({ user, searchQuery = "" }) {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    if (user && user.uid) {
+    if (user?.uid) {
       firebaseService.setUserId(user.uid);
       loadDocuments();
     }
-    // eslint-disable-next-line
   }, [user]);
 
-  // Sync top navbar search into local search input
+  // Keep top navbar search synced
   useEffect(() => {
-    try {
-      console.debug("DocumentsPage sync searchQuery ->", searchQuery);
-    } catch (err) {}
     setSearchTerm(searchQuery || "");
   }, [searchQuery]);
 
   const loadDocuments = async () => {
     try {
       setLoading(true);
-      const documentsData = await firebaseService.getAll("documents");
-      setDocuments(documentsData);
+      const docs = await firebaseService.getAll("documents");
+      setDocuments(docs);
     } catch (error) {
       console.error("Error loading documents:", error);
     } finally {
@@ -44,8 +40,8 @@ export function DocumentsPage({ user, searchQuery = "" }) {
 
   if (loading) {
     return (
-      <div>
-        <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="container-fluid px-2 px-md-4">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
           <h2 className="fw-semibold text-dark">Documents</h2>
         </div>
         <div
@@ -59,31 +55,24 @@ export function DocumentsPage({ user, searchQuery = "" }) {
   }
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="container-fluid px-2 px-md-4">
+      {/* Header */}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
         <div>
           <h2 className="fw-semibold text-dark">Documents</h2>
           <p className="text-muted">Manage case documents and files</p>
         </div>
         <button
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#212529",
-            fontSize: "1rem",
-            fontFamily: "inherit",
-            padding: "10px 16px",
-            borderRadius: "8px",
-            letterSpacing: "0.01em",
-          }}
+          className="mt-2 mt-md-0"
+          style={btnStyle}
           onClick={() => setShowModal(true)}
         >
-          <Upload size={16} style={{ marginRight: "8px" }} />
+          <Upload size={16} className="me-2" />
           Upload Document
         </button>
       </div>
 
-      {/* Search bar */}
+      {/* Search */}
       <div className="mb-4">
         <input
           type="text"
@@ -94,31 +83,37 @@ export function DocumentsPage({ user, searchQuery = "" }) {
         />
       </div>
 
-      {/* Document list */}
+      {/* Documents list */}
       <div className="row">
-        {filteredDocuments.map((doc) => (
-          <div key={doc.id} className="col-12 col-md-6 col-lg-4 mb-4">
-            <div className="custom-card">
-              <div className="custom-card-header">
-                <h5 className="mb-0 d-flex align-items-center">
-                  <FileText size={20} className="me-2" />
-                  {doc.name}
-                </h5>
-              </div>
-              <div className="custom-card-body">
-                <div className="d-flex justify-content-between align-items-center">
-                  <small className="text-muted">{doc.type}</small>
-                  <button className="btn btn-outline-primary btn-sm">
-                    <Download size={16} />
-                  </button>
+        {filteredDocuments.length > 0 ? (
+          filteredDocuments.map((doc) => (
+            <div key={doc.id} className="col-12 col-md-6 col-lg-4 mb-4">
+              <div className="custom-card" style={{ minWidth: "260px" }}>
+                <div className="custom-card-header">
+                  <h5 className="mb-0 d-flex align-items-center">
+                    <FileText size={20} className="me-2" />
+                    {doc.name}
+                  </h5>
+                </div>
+                <div className="custom-card-body">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <small className="text-muted">{doc.type}</small>
+                    <button className="btn btn-outline-primary btn-sm">
+                      <Download size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
+          ))
+        ) : (
+          <div className="col-12 text-center text-muted py-5">
+            No documents found
           </div>
-        ))}
+        )}
       </div>
 
-      {/* Modal for uploading document */}
+      {/* Upload Modal */}
       {showModal && (
         <div
           className="modal fade show d-block"
@@ -126,7 +121,10 @@ export function DocumentsPage({ user, searchQuery = "" }) {
           role="dialog"
           style={{ background: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog" role="document">
+          <div
+            className="modal-dialog modal-sm modal-dialog-centered"
+            role="document"
+          >
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Upload Document</h5>
@@ -141,19 +139,11 @@ export function DocumentsPage({ user, searchQuery = "" }) {
                 <form>
                   <div className="mb-3">
                     <label className="form-label">Document Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter document name"
-                    />
+                    <input type="text" className="form-control" />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Type</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter document type"
-                    />
+                    <input type="text" className="form-control" />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">File</label>
@@ -164,33 +154,12 @@ export function DocumentsPage({ user, searchQuery = "" }) {
               <div className="modal-footer">
                 <button
                   type="button"
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#212529",
-                    fontSize: "1rem",
-                    fontFamily: "inherit",
-                    padding: "10px 16px",
-                    borderRadius: "8px",
-                    letterSpacing: "0.01em",
-                  }}
+                  style={btnStyle}
                   onClick={() => setShowModal(false)}
                 >
                   Cancel
                 </button>
-                <button
-                  type="button"
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#212529",
-                    fontSize: "1rem",
-                    fontFamily: "inherit",
-                    padding: "10px 16px",
-                    borderRadius: "8px",
-                    letterSpacing: "0.01em",
-                  }}
-                >
+                <button type="button" style={btnStyle}>
                   Upload Document
                 </button>
               </div>
@@ -198,6 +167,29 @@ export function DocumentsPage({ user, searchQuery = "" }) {
           </div>
         </div>
       )}
+
+      {/* Responsive tweaks */}
+      <style>
+        {`
+          @media (max-width: 576px) {
+            .custom-card { padding: 0.5rem; }
+            .btn-outline-primary { width: 100%; }
+          }
+        `}
+      </style>
     </div>
   );
 }
+
+/* Shared button style */
+const btnStyle = {
+  background: "transparent",
+  border: "1px solid #ccc",
+  color: "#212529",
+  fontSize: "1rem",
+  fontFamily: "inherit",
+  padding: "10px 16px",
+  borderRadius: "8px",
+  letterSpacing: "0.01em",
+  cursor: "pointer",
+};

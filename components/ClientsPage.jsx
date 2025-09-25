@@ -72,8 +72,8 @@ export function ClientsPage({ user, searchQuery = "" }) {
 
   if (loading) {
     return (
-      <div>
-        <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="container-fluid px-2 px-md-4">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
           <h2 className="fw-semibold text-dark">Clients</h2>
         </div>
         <div className="row">
@@ -97,14 +97,14 @@ export function ClientsPage({ user, searchQuery = "" }) {
   }
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="container-fluid px-2 px-md-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
         <div>
           <h2 className="fw-semibold text-dark">Clients</h2>
           <p className="text-muted">Manage your client relationships</p>
         </div>
         <button
-          className="btn btn-primary-custom"
+          className="btn btn-primary-custom mt-2 mt-md-0 w-100 w-md-auto"
           onClick={() => setShowAddModal(true)}
         >
           <Plus size={16} className="me-2" />
@@ -169,7 +169,7 @@ export function ClientsPage({ user, searchQuery = "" }) {
         <div className="row">
           {filteredClients.map((client) => (
             <div key={client.id} className="col-12 col-md-6 col-lg-4 mb-4">
-              <div className="custom-card">
+              <div className="custom-card" style={{ minWidth: "260px" }}>
                 <div className="custom-card-header">
                   <h5 className="mb-0">{client.name}</h5>
                   {client.company && (
@@ -218,7 +218,7 @@ export function ClientsPage({ user, searchQuery = "" }) {
           className="modal show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-sm modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Add New Client</h5>
@@ -311,6 +311,19 @@ export function ClientsPage({ user, searchQuery = "" }) {
           </div>
         </div>
       )}
+      {/* Responsive styles */}
+      <style>
+        {`
+          @media (max-width: 576px) {
+            .custom-card {
+              padding: 0.5rem;
+            }
+            .btn-primary-custom {
+              width: 100%;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

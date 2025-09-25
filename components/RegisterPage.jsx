@@ -3,6 +3,7 @@ import { auth } from "../firebase/config.js";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
 export function RegisterPage({ onRegister }) {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -10,8 +11,8 @@ export function RegisterPage({ onRegister }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Please enter email and password.");
+    if (!name || !email || !password) {
+      setError("Please enter name, email and password.");
       return;
     }
     // Simple email format check
@@ -30,7 +31,8 @@ export function RegisterPage({ onRegister }) {
         password
       );
       const user = userCredential.user;
-      onRegister({ uid: user.uid, email: user.email });
+      // Pass name along with uid and email
+      onRegister({ uid: user.uid, email: user.email, name });
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
         setError("User already exists with this email.");
@@ -48,10 +50,20 @@ export function RegisterPage({ onRegister }) {
       <form
         onSubmit={handleSubmit}
         className="p-4 bg-white rounded shadow"
-        style={{ minWidth: 320 }}
+        style={{ minWidth: 320, width: "100%", maxWidth: 400 }}
       >
         <h2 className="mb-4 text-center">Register</h2>
         {error && <div className="alert alert-danger">{error}</div>}
+        <div className="mb-3">
+          <label className="form-label">Name</label>
+          <input
+            type="text"
+            className="form-control"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+          />
+        </div>
         <div className="mb-3">
           <label className="form-label">Email</label>
           <input
@@ -59,7 +71,6 @@ export function RegisterPage({ onRegister }) {
             className="form-control"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            autoFocus
           />
         </div>
         <div className="mb-3">
@@ -84,6 +95,18 @@ export function RegisterPage({ onRegister }) {
           Register
         </button>
       </form>
+      {/* Responsive styles */}
+      <style>
+        {`
+          @media (max-width: 576px) {
+            form.p-4 {
+              padding: 1rem !important;
+              min-width: 0 !important;
+              max-width: 100vw !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

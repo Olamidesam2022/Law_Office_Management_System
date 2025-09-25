@@ -12,6 +12,24 @@ import {
 } from "firebase/firestore";
 import { db } from "./config.js";
 
+// Helper to build queries with userId, conditions, and ordering
+function buildQuery(
+  collectionName,
+  userId,
+  conditions = [],
+  orderByField = null,
+  direction = "asc"
+) {
+  let q = query(collection(db, collectionName), where("userId", "==", userId));
+  conditions.forEach((c) => {
+    q = query(q, where(c.field, c.operator, c.value));
+  });
+  if (orderByField) {
+    q = query(q, orderBy(orderByField, direction));
+  }
+  return q;
+}
+
 export const firebaseService = {
   userId: null, // keep track of current user
 
@@ -31,20 +49,13 @@ export const firebaseService = {
   // Get all documents (with optional ordering)
   async getAll(collectionName, orderByField = null, direction = "asc") {
     if (!this.userId) throw new Error("userId not set on firebaseService");
-
-    let q = query(
-      collection(db, collectionName),
-      where("userId", "==", this.userId)
+    const q = buildQuery(
+      collectionName,
+      this.userId,
+      [],
+      orderByField,
+      direction
     );
-
-    if (orderByField) {
-      q = query(
-        collection(db, collectionName),
-        where("userId", "==", this.userId),
-        orderBy(orderByField, direction)
-      );
-    }
-
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -80,20 +91,13 @@ export const firebaseService = {
     direction = "asc"
   ) {
     if (!this.userId) throw new Error("userId not set on firebaseService");
-
-    let q = query(
-      collection(db, collectionName),
-      where("userId", "==", this.userId)
+    const q = buildQuery(
+      collectionName,
+      this.userId,
+      conditions,
+      orderByField,
+      direction
     );
-
-    conditions.forEach((c) => {
-      q = query(q, where(c.field, c.operator, c.value));
-    });
-
-    if (orderByField) {
-      q = query(q, orderBy(orderByField, direction));
-    }
-
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -182,5 +186,15 @@ export const firebaseService = {
   // Set current user
   setUserId(userId) {
     this.userId = userId;
+  },
+
+  // Add this helper if you store user info in Firestore
+  async saveUserProfile({ uid, name, email }) {
+    await addDoc(collection(db, "users"), {
+      uid,
+      name,
+      email,
+      createdAt: new Date(),
+    });
   },
 };

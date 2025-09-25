@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopNavbar } from "./TopNavbar";
+import { firebaseService } from "../firebase/services.js";
 
 export function Layout({
   children,
@@ -14,9 +15,39 @@ export function Layout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAddCaseModal, setShowAddCaseModal] = useState(false);
 
+  // form state
+  const [caseTitle, setCaseTitle] = useState("");
+  const [client, setClient] = useState("");
+  const [caseType, setCaseType] = useState("");
+
+  // Save case to Firestore
+  const handleAddCase = async () => {
+    if (!caseTitle.trim()) {
+      alert("Case title is required!");
+      return;
+    }
+    try {
+      await firebaseService.add("cases", {
+        title: caseTitle,
+        client,
+        type: caseType,
+        createdAt: new Date().toISOString(),
+      });
+      alert("Case added successfully!");
+      // reset form + close modal
+      setCaseTitle("");
+      setClient("");
+      setCaseType("");
+      setShowAddCaseModal(false);
+    } catch (err) {
+      console.error("Error adding case:", err);
+      alert("Failed to add case. Please try again.");
+    }
+  };
+
   return (
     <div className="d-flex">
-      {/* Sidebar (desktop + mobile overlay handled inside Sidebar) */}
+      {/* Sidebar (fixed) */}
       <Sidebar
         currentPage={currentPage}
         onPageChange={onPageChange}
@@ -24,8 +55,13 @@ export function Layout({
         onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Main content area */}
-      <div className="flex-grow-1" style={{ marginLeft: "250px" }}>
+      {/* Main content */}
+      <div
+        className="flex-grow-1"
+        style={{
+          marginLeft: "250px", // always push content right
+        }}
+      >
         {/* Top Navbar */}
         <TopNavbar
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
@@ -36,7 +72,8 @@ export function Layout({
           onSearchSubmit={onSearch}
           onAddCase={() => setShowAddCaseModal(true)}
         />
-        {/* Debug label: show current search and page */}
+
+        {/* Debug info */}
         <div
           style={{
             background: "#f3f4f6",
@@ -56,7 +93,7 @@ export function Layout({
             className="modal show d-block"
             style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
           >
-            <div className="modal-dialog">
+            <div className="modal-dialog modal-sm modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">Add New Case</h5>
@@ -67,12 +104,13 @@ export function Layout({
                   ></button>
                 </div>
                 <div className="modal-body">
-                  {/* Add your case form fields here */}
                   <div className="form-group mb-3">
                     <label className="form-label">Case Title *</label>
                     <input
                       type="text"
                       className="form-control"
+                      value={caseTitle}
+                      onChange={(e) => setCaseTitle(e.target.value)}
                       placeholder="Enter case title"
                     />
                   </div>
@@ -81,6 +119,8 @@ export function Layout({
                     <input
                       type="text"
                       className="form-control"
+                      value={client}
+                      onChange={(e) => setClient(e.target.value)}
                       placeholder="Enter client name"
                     />
                   </div>
@@ -89,6 +129,8 @@ export function Layout({
                     <input
                       type="text"
                       className="form-control"
+                      value={caseType}
+                      onChange={(e) => setCaseType(e.target.value)}
                       placeholder="e.g., Civil, Criminal, Corporate"
                     />
                   </div>
@@ -101,7 +143,11 @@ export function Layout({
                   >
                     Cancel
                   </button>
-                  <button type="button" className="btn btn-primary-custom">
+                  <button
+                    type="button"
+                    className="btn btn-primary-custom"
+                    onClick={handleAddCase}
+                  >
                     Add Case
                   </button>
                 </div>
@@ -110,7 +156,7 @@ export function Layout({
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Content */}
         <div
           className="p-4"
           style={{

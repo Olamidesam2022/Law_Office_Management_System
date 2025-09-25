@@ -29,9 +29,6 @@ export function CasesPage({ user, searchQuery = "" }) {
 
   // Sync top navbar search into local search input
   useEffect(() => {
-    try {
-      console.debug("CasesPage sync searchQuery ->", searchQuery);
-    } catch (err) {}
     setSearchTerm(searchQuery || "");
   }, [searchQuery]);
 
@@ -110,8 +107,8 @@ export function CasesPage({ user, searchQuery = "" }) {
 
   if (loading) {
     return (
-      <div>
-        <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="container-fluid px-2 px-md-4">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
           <h2 className="fw-semibold text-dark">Cases</h2>
         </div>
         <div>
@@ -133,14 +130,15 @@ export function CasesPage({ user, searchQuery = "" }) {
   }
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="container-fluid px-2 px-md-4">
+      {/* Header */}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
         <div>
           <h2 className="fw-semibold text-dark">Cases</h2>
           <p className="text-muted">Track and manage your legal cases</p>
         </div>
         <button
-          className="btn btn-primary-custom"
+          className="btn btn-primary-custom mt-2 mt-md-0 w-100 w-md-auto"
           onClick={() => setShowAddModal(true)}
         >
           <Plus size={16} className="me-2" />
@@ -193,7 +191,7 @@ export function CasesPage({ user, searchQuery = "" }) {
       {filteredCases.length === 0 ? (
         <div className="custom-card">
           <div className="custom-card-body">
-            <div className="empty-state">
+            <div className="empty-state text-center">
               <Briefcase className="empty-state-icon" size={64} />
               <h5 className="fw-medium text-dark mb-2">No cases found</h5>
               <p className="text-muted mb-4">
@@ -214,14 +212,18 @@ export function CasesPage({ user, searchQuery = "" }) {
           </div>
         </div>
       ) : (
-        <div>
+        <div className="overflow-auto">
           {filteredCases.map((caseItem) => {
             const client = clients.find((c) => c.id === caseItem.clientId);
             return (
-              <div key={caseItem.id} className="custom-card mb-3">
+              <div
+                key={caseItem.id}
+                className="custom-card mb-3"
+                style={{ minWidth: "280px" }}
+              >
                 <div className="custom-card-header">
                   <div className="row align-items-start">
-                    <div className="col-12 col-lg-8">
+                    <div className="col-12 col-lg-8 mb-2 mb-lg-0">
                       <h5 className="mb-2">{caseItem.title}</h5>
                       <div
                         className="d-flex flex-wrap gap-3 text-muted"
@@ -283,7 +285,7 @@ export function CasesPage({ user, searchQuery = "" }) {
           className="modal show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-sm modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Add New Case</h5>
@@ -294,7 +296,7 @@ export function CasesPage({ user, searchQuery = "" }) {
                 ></button>
               </div>
               <div className="modal-body">
-                <div className="form-group">
+                <div className="form-group mb-3">
                   <label className="form-label">Case Title *</label>
                   <input
                     type="text"
@@ -306,7 +308,7 @@ export function CasesPage({ user, searchQuery = "" }) {
                     className="form-control"
                   />
                 </div>
-                <div className="form-group">
+                <div className="form-group mb-3">
                   <label className="form-label">Client *</label>
                   <select
                     value={newCase.clientId}
@@ -323,7 +325,7 @@ export function CasesPage({ user, searchQuery = "" }) {
                     ))}
                   </select>
                 </div>
-                <div className="form-group">
+                <div className="form-group mb-3">
                   <label className="form-label">Case Type</label>
                   <input
                     type="text"
@@ -335,7 +337,7 @@ export function CasesPage({ user, searchQuery = "" }) {
                     className="form-control"
                   />
                 </div>
-                <div className="form-group">
+                <div className="form-group mb-3">
                   <label className="form-label">Priority</label>
                   <select
                     value={newCase.priority}
@@ -349,7 +351,7 @@ export function CasesPage({ user, searchQuery = "" }) {
                     <option value="low">Low</option>
                   </select>
                 </div>
-                <div className="form-group">
+                <div className="form-group mb-3">
                   <label className="form-label">Deadline</label>
                   <input
                     type="date"
@@ -360,7 +362,7 @@ export function CasesPage({ user, searchQuery = "" }) {
                     className="form-control"
                   />
                 </div>
-                <div className="form-group">
+                <div className="form-group mb-3">
                   <label className="form-label">Description</label>
                   <input
                     type="text"
@@ -394,6 +396,23 @@ export function CasesPage({ user, searchQuery = "" }) {
           </div>
         </div>
       )}
+
+      {/* Responsive styles */}
+      <style>
+        {`
+          @media (max-width: 576px) {
+            .custom-card-header .row > [class^="col-"] {
+              margin-bottom: 8px;
+            }
+            .custom-card {
+              padding: 0.5rem;
+            }
+            .btn-primary-custom {
+              width: 100%;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

@@ -110,7 +110,7 @@ export function CalendarPage({ user }) {
 
   if (loading) {
     return (
-      <div>
+      <div className="container-fluid px-2">
         <h2 className="fw-semibold text-dark">Calendar</h2>
         <div
           className="d-flex justify-content-center align-items-center"
@@ -123,7 +123,7 @@ export function CalendarPage({ user }) {
   }
 
   return (
-    <div>
+    <div className="container-fluid px-2">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -182,9 +182,9 @@ export function CalendarPage({ user }) {
                           {appointment.status}
                         </span>
                       </div>
-                      <div>
+                      <div className="d-flex gap-2">
                         <button
-                          className="btn btn-outline-primary btn-sm me-2"
+                          className="btn btn-outline-primary btn-sm"
                           onClick={() => {
                             setSelectedAppointment(appointment);
                             setTitle(appointment.title);

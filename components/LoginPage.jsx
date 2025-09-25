@@ -14,7 +14,11 @@ export function LoginPage({ onLogin }) {
       return;
     }
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, username, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        username,
+        password
+      );
       const user = userCredential.user;
       onLogin({ uid: user.uid, email: user.email });
     } catch (err) {
@@ -30,7 +34,7 @@ export function LoginPage({ onLogin }) {
       <form
         onSubmit={handleSubmit}
         className="p-4 bg-white rounded shadow"
-        style={{ minWidth: 320 }}
+        style={{ minWidth: 320, width: "100%", maxWidth: 400 }}
       >
         <h2 className="mb-4 text-center">Login</h2>
         {error && <div className="alert alert-danger">{error}</div>}
@@ -68,6 +72,18 @@ export function LoginPage({ onLogin }) {
           </button>
         </div>
       </form>
+      {/* Responsive styles */}
+      <style>
+        {`
+          @media (max-width: 576px) {
+            form.p-4 {
+              padding: 1rem !important;
+              min-width: 0 !important;
+              max-width: 100vw !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
