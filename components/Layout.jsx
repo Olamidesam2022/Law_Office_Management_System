@@ -14,6 +14,7 @@ export function Layout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAddCaseModal, setShowAddCaseModal] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // form state
   const [caseTitle, setCaseTitle] = useState("");
@@ -49,19 +50,17 @@ export function Layout({
     <div className="d-flex">
       {/* Sidebar (fixed) */}
       <Sidebar
+        showSidebar={showSidebar}
+        setShowSidebar={setShowSidebar}
         currentPage={currentPage}
         onPageChange={onPageChange}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onLogout={onLogout}
       />
 
       {/* Main content */}
-      <div
-        className="flex-grow-1"
-        style={{
-          marginLeft: "250px", // always push content right
-        }}
-      >
+      <div className="flex-grow-1 dashboard ">
         {/* Top Navbar */}
         <TopNavbar
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
@@ -71,6 +70,8 @@ export function Layout({
           onSearch={onSearch}
           onSearchSubmit={onSearch}
           onAddCase={() => setShowAddCaseModal(true)}
+          showSidebar={showSidebar}
+          setShowSidebar={setShowSidebar}
         />
 
         {/* Debug info */}
