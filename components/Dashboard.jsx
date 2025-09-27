@@ -4,10 +4,19 @@ import {
   Briefcase,
   FileText,
   DollarSign,
-  AlertTriangle,
   Calendar,
+  CheckCircle,
 } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 
 export function Dashboard({ user }) {
   const [stats, setStats] = useState({
@@ -16,20 +25,23 @@ export function Dashboard({ user }) {
     totalDocuments: 0,
     monthlyRevenue: 0,
   });
-
+  const [appointments, setAppointments] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user?.uid) {
       firebaseService.setUserId(user.uid);
       loadDashboardData();
+      loadAppointments();
+      loadRevenueData();
     }
   }, [user]);
 
+  // 📊 Load stats
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-
       const [clients, cases, documents, invoices] = await Promise.all([
         firebaseService.getAll("clients"),
         firebaseService.getAll("cases"),
@@ -62,6 +74,53 @@ export function Dashboard({ user }) {
       console.error("Error loading dashboard data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 📅 Load appointments
+  const loadAppointments = async () => {
+    try {
+      const appts = await firebaseService.getAll("appointments");
+      const scheduled = appts.filter((a) => a.status === "scheduled");
+      setAppointments(scheduled);
+    } catch (err) {
+      console.error("Error loading appointments:", err);
+    }
+  };
+
+  // ✅ Mark appointment complete
+  const markComplete = async (id) => {
+    try {
+      await firebaseService.update("appointments", id, { status: "completed" });
+      setAppointments((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      console.error("Error updating appointment:", err);
+    }
+  };
+
+  // 💰 Load revenue grouped by month
+  const loadRevenueData = async () => {
+    try {
+      const invoices = await firebaseService.getAll("invoices");
+      const monthlyMap = {};
+
+      invoices.forEach((invoice) => {
+        if (!invoice.date || !invoice.amount) return;
+        const date = new Date(invoice.date);
+        const month = date.toLocaleString("default", { month: "short" });
+        const year = date.getFullYear();
+        const key = `${month} ${year}`;
+        monthlyMap[key] = (monthlyMap[key] || 0) + invoice.amount;
+      });
+
+      const chartData = Object.keys(monthlyMap).map((month) => ({
+        month,
+        revenue: monthlyMap[month],
+      }));
+
+      setRevenueData(chartData);
+    } catch (err) {
+      console.error("Error loading revenue data:", err);
     }
   };
 
@@ -141,30 +200,39 @@ export function Dashboard({ user }) {
         })}
       </div>
 
-      {/* Quick Actions */}
+      {/* Revenue Bar Chart & Appointments */}
       <div className="row">
-        {/* Alerts */}
+        {/* Revenue Bar Chart */}
         <div className="col-12 col-lg-6 mb-4">
           <div className="custom-card" style={{ minWidth: "260px" }}>
             <div className="custom-card-header">
-              <h5 className="mb-0 d-flex align-items-center">
-                <AlertTriangle size={20} color="#f59e0b" className="me-2" />
-                Recent Alerts
-              </h5>
+              <h5 className="mb-0">Monthly Revenue</h5>
             </div>
-            <div className="custom-card-body">
-              <div className="empty-state">
-                <AlertTriangle className="empty-state-icon" size={48} />
-                <p className="text-muted mb-1">No alerts at this time</p>
-                <small className="text-muted">
-                  Alerts for deadlines and overdue items will appear here
-                </small>
-              </div>
+            <div className="custom-card-body" style={{ height: "320px" }}>
+              {revenueData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar
+                      dataKey="revenue"
+                      fill="#4F46E5"
+                      radius={[6, 6, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-muted text-center mt-4">
+                  No revenue data available
+                </p>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Appointments */}
+        {/* Upcoming Appointments */}
         <div className="col-12 col-lg-6 mb-4">
           <div className="custom-card" style={{ minWidth: "260px" }}>
             <div className="custom-card-header">
@@ -174,13 +242,38 @@ export function Dashboard({ user }) {
               </h5>
             </div>
             <div className="custom-card-body">
-              <div className="empty-state">
-                <Calendar className="empty-state-icon" size={48} />
-                <p className="text-muted mb-1">No upcoming appointments</p>
-                <small className="text-muted">
-                  Your scheduled appointments will appear here
-                </small>
-              </div>
+              {appointments.length > 0 ? (
+                <ul className="list-group">
+                  {appointments.map((appt) => (
+                    <li
+                      key={appt.id}
+                      className="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      <div>
+                        <div className="fw-semibold">{appt.title}</div>
+                        <small className="text-muted">
+                          {new Date(appt.date).toLocaleString()}
+                        </small>
+                      </div>
+                      <button
+                        className="btn btn-sm btn-success"
+                        onClick={() => markComplete(appt.id)}
+                      >
+                        <CheckCircle size={16} className="me-1" />
+                        Mark Complete
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="empty-state text-center">
+                  <Calendar className="empty-state-icon" size={48} />
+                  <p className="text-muted mb-1">No upcoming appointments</p>
+                  <small className="text-muted">
+                    Your scheduled appointments will appear here
+                  </small>
+                </div>
+              )}
             </div>
           </div>
         </div>

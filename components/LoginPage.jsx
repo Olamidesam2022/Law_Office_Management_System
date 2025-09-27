@@ -3,20 +3,20 @@ import { auth } from "../firebase/config.js";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
 export function LoginPage({ onLogin }) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username || !password) {
+    if (!email || !password) {
       setError("Please enter email and password.");
       return;
     }
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
-        username,
+        email,
         password
       );
       const user = userCredential.user;
@@ -28,53 +28,94 @@ export function LoginPage({ onLogin }) {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center"
+      className="d-flex flex-column flex-md-row"
       style={{ minHeight: "100vh", background: "#f8fafc" }}
     >
-      <form
-        onSubmit={handleSubmit}
-        className="p-4 bg-white rounded shadow"
-        style={{ minWidth: 320, width: "100%", maxWidth: 400 }}
-      >
-        <h2 className="mb-4 text-center">Login</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
-        <div className="mb-3">
-          <label className="form-label">Username</label>
-          <input
-            type="text"
-            className="form-control"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoFocus
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <button type="submit" className="btn btn-primary w-100">
-          Login
-        </button>
-        <div className="mt-3 text-center">
-          <button
-            type="button"
-            className="btn btn-link p-0"
-            onClick={() =>
-              window.navigateToRegister && window.navigateToRegister()
-            }
-          >
-            Don't have an account? Register
+      {/* Left Side: Form */}
+      <div className="d-flex flex-grow-1 justify-content-center align-items-center p-4">
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 bg-white rounded shadow animate-fadeIn"
+          style={{ minWidth: 320, width: "100%", maxWidth: 400 }}
+        >
+          <h2 className="mb-4 text-center">Login</h2>
+          {error && <div className="alert alert-danger">{error}</div>}
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              className="form-control"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-control"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary w-100">
+            Login
           </button>
-        </div>
-      </form>
-      {/* Responsive styles */}
+          <div className="mt-3 text-center">
+            <button
+              type="button"
+              className="btn btn-link p-0"
+              onClick={() =>
+                window.navigateToRegister && window.navigateToRegister()
+              }
+            >
+              Don't have an account? Register
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div
+        className="d-none d-md-flex flex-grow-1 justify-content-center align-items-center text-white animate-slideIn"
+        style={{
+          background: "url('/images/law.jpg')",
+          backgroundSize: "cover",
+          padding: "2rem",
+          flexDirection: "column",
+          textAlign: "center",
+        }}
+      >
+        <h2 style={{ fontWeight: "700", marginBottom: "1rem" }}>
+          Welcome Back
+        </h2>
+        <p style={{ fontSize: "1.1rem", maxWidth: 400 }}>
+          Manage your cases securely and stay productive with your LawOffice
+          Management System.
+        </p>
+      </div>
+
       <style>
         {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes slideIn {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.8s ease-out forwards;
+          }
+          .animate-slideIn {
+            animation: slideIn 1s ease-out forwards;
+          }
+          @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
           @media (max-width: 576px) {
             form.p-4 {
               padding: 1rem !important;

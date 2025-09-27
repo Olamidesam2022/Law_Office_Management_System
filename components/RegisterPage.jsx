@@ -15,7 +15,6 @@ export function RegisterPage({ onRegister }) {
       setError("Please enter name, email and password.");
       return;
     }
-    // Simple email format check
     if (!/^\S+@\S+\.\S+$/.test(email)) {
       setError("Please enter a valid email address.");
       return;
@@ -31,7 +30,6 @@ export function RegisterPage({ onRegister }) {
         password
       );
       const user = userCredential.user;
-      // Pass name along with uid and email
       onRegister({ uid: user.uid, email: user.email, name });
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
@@ -44,60 +42,105 @@ export function RegisterPage({ onRegister }) {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center"
+      className="d-flex flex-column flex-md-row"
       style={{ minHeight: "100vh", background: "#f8fafc" }}
     >
-      <form
-        onSubmit={handleSubmit}
-        className="p-4 bg-white rounded shadow"
-        style={{ minWidth: 320, width: "100%", maxWidth: 400 }}
+      {/* Left Side: Form */}
+      <div className="d-flex flex-grow-1 justify-content-center align-items-center p-4">
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 bg-white rounded shadow animate-fadeIn"
+          style={{ minWidth: 320, width: "100%", maxWidth: 400 }}
+        >
+          <h2 className="mb-4 text-center">Register</h2>
+          {error && <div className="alert alert-danger">{error}</div>}
+          <div className="mb-3">
+            <label className="form-label">Name</label>
+            <input
+              type="text"
+              className="form-control"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              className="form-control"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-control"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Confirm Password</label>
+            <input
+              type="password"
+              className="form-control"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary w-100">
+            Register
+          </button>
+          <div className="mt-3 text-center">
+            <button
+              type="button"
+              className="btn btn-link p-0"
+              onClick={() => window.navigateToLogin && window.navigateToLogin()}
+            >
+              Already have an account? Login
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div
+        className="d-none d-md-flex flex-grow-1 justify-content-center align-items-center text-white animate-slideIn"
+        style={{
+          background: "url('/images/law.jpg')",
+          backgroundSize: "cover",
+          padding: "2rem",
+          flexDirection: "column",
+          textAlign: "center",
+        }}
       >
-        <h2 className="mb-4 text-center">Register</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
-        <div className="mb-3">
-          <label className="form-label">Name</label>
-          <input
-            type="text"
-            className="form-control"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input
-            type="email"
-            className="form-control"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Confirm Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </div>
-        <button type="submit" className="btn btn-primary w-100">
-          Register
-        </button>
-      </form>
-      {/* Responsive styles */}
+        <h2 style={{ fontWeight: "700", marginBottom: "1rem" }}>
+          📝 Create Your Account
+        </h2>
+        <p style={{ fontSize: "1.1rem", maxWidth: 400 }}>
+          Start managing your law office with an all-in-one system. Easy,
+          secure, and efficient.
+        </p>
+      </div>
+
       <style>
         {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes slideIn {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.8s ease-out forwards;
+          }
+          .animate-slideIn {
+            animation: slideIn 1s ease-out forwards;
+          }
           @media (max-width: 576px) {
             form.p-4 {
               padding: 1rem !important;
