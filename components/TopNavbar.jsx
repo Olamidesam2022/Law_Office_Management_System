@@ -1,6 +1,7 @@
+import { MenuIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
-export function TopNavbar({ user, onLogout }) {
+export function TopNavbar({ user, onLogout, showSidebar, setShowSidebar }) {
   const [dateTime, setDateTime] = useState(new Date());
 
   // Update clock every second
@@ -55,14 +56,7 @@ export function TopNavbar({ user, onLogout }) {
       }}
     >
       {/* Left: Live Date & Time */}
-      <div
-        style={{
-          fontSize: "15px",
-          fontWeight: "600",
-          color: "#4b5563",
-          letterSpacing: "0.02em",
-        }}
-      >
+      <div className="live-date">
         {dateTime.toLocaleDateString(undefined, {
           weekday: "long",
           year: "numeric",
@@ -74,7 +68,7 @@ export function TopNavbar({ user, onLogout }) {
 
       {/* Right: Hello + User + Logout */}
       <div className="d-flex align-items-center fade-in-user">
-        <div className="text-end me-2">
+        <div className="d-none d-md-inline text-end me-2">
           <div
             style={{
               fontSize: "15px",
@@ -106,7 +100,13 @@ export function TopNavbar({ user, onLogout }) {
           {initials}
         </div>
         <button
-          className="btn btn-outline-danger ms-2"
+          onClick={() => setShowSidebar(!showSidebar)}
+          className="btn btn-light d-lg-none ms-2"
+        >
+          <MenuIcon />
+        </button>
+        <button
+          className="btn btn-outline-danger ms-2 d-none d-lg-inline"
           style={{
             fontWeight: 600,
             borderRadius: "9999px",

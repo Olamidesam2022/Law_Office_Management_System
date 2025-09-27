@@ -1,4 +1,3 @@
-import React from "react";
 import {
   LayoutGrid,
   Users,
@@ -9,7 +8,13 @@ import {
   Scale,
 } from "lucide-react";
 
-export function Sidebar({ currentPage, onPageChange }) {
+export function Sidebar({
+  currentPage,
+  onPageChange,
+  showSidebar,
+  setShowSidebar,
+  onLogout,
+}) {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutGrid },
     { id: "clients", label: "Clients", icon: Users },
@@ -21,7 +26,9 @@ export function Sidebar({ currentPage, onPageChange }) {
 
   return (
     <div
-      className="sidebar d-flex flex-column"
+      className={` d-lg-flex flex-column ${
+        showSidebar ? "show d-flex" : "d-none"
+      }`}
       style={{
         width: "250px",
         background: "#0f172a",
@@ -30,7 +37,7 @@ export function Sidebar({ currentPage, onPageChange }) {
         top: 0,
         left: 0,
         bottom: 0,
-        zIndex: 1000,
+        zIndex: 10000,
         padding: "1rem",
       }}
     >
@@ -64,7 +71,10 @@ export function Sidebar({ currentPage, onPageChange }) {
           return (
             <button
               key={item.id}
-              onClick={() => onPageChange(item.id)}
+              onClick={() => {
+                onPageChange(item.id);
+                setShowSidebar(false);
+              }}
               className={`w-100 text-start d-flex align-items-center px-3 py-2 mb-2 rounded ${
                 isActive ? "bg-primary text-white" : "text-light"
               }`}
@@ -76,6 +86,21 @@ export function Sidebar({ currentPage, onPageChange }) {
           );
         })}
       </nav>
+
+      <button
+        className="btn btn-outline-danger ms-2 d-block d-lg-none"
+        style={{
+          fontWeight: 600,
+          borderRadius: "9999px",
+          fontSize: "0.95rem",
+          padding: "4px 14px",
+          height: "32px",
+          lineHeight: "1.1",
+        }}
+        onClick={onLogout}
+      >
+        Logout
+      </button>
 
       {/* Gradient animation style */}
       <style>
