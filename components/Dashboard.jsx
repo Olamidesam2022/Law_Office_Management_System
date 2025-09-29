@@ -17,6 +17,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 export function Dashboard({ user }) {
   const [stats, setStats] = useState({
@@ -28,6 +29,8 @@ export function Dashboard({ user }) {
   const [appointments, setAppointments] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.uid) {
@@ -77,12 +80,20 @@ export function Dashboard({ user }) {
     }
   };
 
-  // 📅 Load appointments
+  // 📅 Load only upcoming appointments (limit to 5)
   const loadAppointments = async () => {
     try {
       const appts = await firebaseService.getAll("appointments");
-      const scheduled = appts.filter((a) => a.status === "scheduled");
-      setAppointments(scheduled);
+      const today = new Date().toISOString().split("T")[0];
+
+      const scheduled = appts.filter(
+        (a) =>
+          a.userId === user.uid && a.status === "scheduled" && a.date >= today
+      );
+
+      // Sort by nearest date and take only first 5
+      scheduled.sort((a, b) => new Date(a.date) - new Date(b.date));
+      setAppointments(scheduled.slice(0, 5));
     } catch (err) {
       console.error("Error loading appointments:", err);
     }
@@ -235,11 +246,17 @@ export function Dashboard({ user }) {
         {/* Upcoming Appointments */}
         <div className="col-12 col-lg-6 mb-4">
           <div className="custom-card" style={{ minWidth: "260px" }}>
-            <div className="custom-card-header">
+            <div className="custom-card-header d-flex justify-content-between align-items-center">
               <h5 className="mb-0 d-flex align-items-center">
                 <Calendar size={20} color="#2563eb" className="me-2" />
                 Upcoming Appointments
               </h5>
+              <button
+                className="btn btn-link btn-sm"
+                onClick={() => navigate("/calendar")}
+              >
+                View All
+              </button>
             </div>
             <div className="custom-card-body">
               {appointments.length > 0 ? (
@@ -252,7 +269,8 @@ export function Dashboard({ user }) {
                       <div>
                         <div className="fw-semibold">{appt.title}</div>
                         <small className="text-muted">
-                          {new Date(appt.date).toLocaleString()}
+                          {new Date(appt.date).toLocaleDateString()} at{" "}
+                          {appt.time}
                         </small>
                       </div>
                       <button

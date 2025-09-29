@@ -50,7 +50,15 @@ export function CalendarPage({ user }) {
     if (!validateForm()) return;
 
     try {
-      const newAppointment = { title, date, time, clientName, status };
+      // Always include userId
+      const newAppointment = {
+        title,
+        date,
+        time,
+        clientName,
+        status,
+        userId: user.uid,
+      };
 
       if (selectedAppointment) {
         // Update existing

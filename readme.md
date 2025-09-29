@@ -247,3 +247,7 @@ The **Law Office Management Web Application** is an innovative demonstration of 
 This project is not only a **technical achievement** but also an **academic milestone**, as it shows how students can apply their knowledge to address real-world challenges. With further development, the system can evolve into a production-ready enterprise solution.
 
 > This project represents the perfect blend of technology and law, paving the way for future innovations in the legal industry.
+
+improvements
+case managment should be able to add documents to each cases
+user management > ADMIN ROLE as well as the LAWYER

@@ -50,7 +50,8 @@ export function Sidebar({
             fontSize: "17px",
             fontWeight: "800",
             lineHeight: "1.2",
-            background: "linear-gradient(270deg, #2563eb, #9333ea, #f43f5e)",
+            background:
+              "linear-gradient(270deg, #2563eb, #0d0118ff, #03123bff)",
             backgroundSize: "600% 600%",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
