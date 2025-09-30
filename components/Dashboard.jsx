@@ -17,9 +17,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { useNavigate } from "react-router-dom";
 
-export function Dashboard({ user }) {
+export function Dashboard({ user, onPageChange }) {
   const [stats, setStats] = useState({
     totalClients: 0,
     activeCases: 0,
@@ -30,8 +29,6 @@ export function Dashboard({ user }) {
   const [revenueData, setRevenueData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const navigate = useNavigate();
-
   useEffect(() => {
     if (user?.uid) {
       firebaseService.setUserId(user.uid);
@@ -41,7 +38,6 @@ export function Dashboard({ user }) {
     }
   }, [user]);
 
-  // 📊 Load stats
   const loadDashboardData = async () => {
     try {
       setLoading(true);
@@ -52,20 +48,18 @@ export function Dashboard({ user }) {
         firebaseService.getAll("invoices"),
       ]);
 
-      const activeCases = cases.filter(
-        (caseItem) => caseItem.status !== "closed"
-      ).length;
+      const activeCases = cases.filter((c) => c.status !== "closed").length;
 
       const monthlyRevenue = invoices
         .filter((invoice) => {
-          const invoiceDate = new Date(invoice.date);
+          const date = new Date(invoice.date);
           const now = new Date();
           return (
-            invoiceDate.getMonth() === now.getMonth() &&
-            invoiceDate.getFullYear() === now.getFullYear()
+            date.getMonth() === now.getMonth() &&
+            date.getFullYear() === now.getFullYear()
           );
         })
-        .reduce((sum, invoice) => sum + (invoice.amount || 0), 0);
+        .reduce((sum, inv) => sum + (inv.amount || 0), 0);
 
       setStats({
         totalClients: clients.length,
@@ -73,33 +67,31 @@ export function Dashboard({ user }) {
         totalDocuments: documents.length,
         monthlyRevenue,
       });
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
+    } catch (err) {
+      console.error("Error loading stats:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 📅 Load only upcoming appointments (limit to 5)
   const loadAppointments = async () => {
     try {
       const appts = await firebaseService.getAll("appointments");
       const today = new Date().toISOString().split("T")[0];
 
-      const scheduled = appts.filter(
-        (a) =>
-          a.userId === user.uid && a.status === "scheduled" && a.date >= today
-      );
+      const scheduled = appts
+        .filter(
+          (a) =>
+            a.userId === user.uid && a.status === "scheduled" && a.date >= today
+        )
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      // Sort by nearest date and take only first 5
-      scheduled.sort((a, b) => new Date(a.date) - new Date(b.date));
       setAppointments(scheduled.slice(0, 5));
     } catch (err) {
       console.error("Error loading appointments:", err);
     }
   };
 
-  // ✅ Mark appointment complete
   const markComplete = async (id) => {
     try {
       await firebaseService.update("appointments", id, { status: "completed" });
@@ -109,27 +101,26 @@ export function Dashboard({ user }) {
     }
   };
 
-  // 💰 Load revenue grouped by month
   const loadRevenueData = async () => {
     try {
       const invoices = await firebaseService.getAll("invoices");
       const monthlyMap = {};
 
-      invoices.forEach((invoice) => {
-        if (!invoice.date || !invoice.amount) return;
-        const date = new Date(invoice.date);
-        const month = date.toLocaleString("default", { month: "short" });
-        const year = date.getFullYear();
-        const key = `${month} ${year}`;
-        monthlyMap[key] = (monthlyMap[key] || 0) + invoice.amount;
+      invoices.forEach((inv) => {
+        if (!inv.date || !inv.amount) return;
+        const d = new Date(inv.date);
+        const key = `${d.toLocaleString("default", {
+          month: "short",
+        })} ${d.getFullYear()}`;
+        monthlyMap[key] = (monthlyMap[key] || 0) + inv.amount;
       });
 
-      const chartData = Object.keys(monthlyMap).map((month) => ({
-        month,
-        revenue: monthlyMap[month],
-      }));
-
-      setRevenueData(chartData);
+      setRevenueData(
+        Object.keys(monthlyMap).map((m) => ({
+          month: m,
+          revenue: monthlyMap[m],
+        }))
+      );
     } catch (err) {
       console.error("Error loading revenue data:", err);
     }
@@ -138,25 +129,25 @@ export function Dashboard({ user }) {
   const statCards = [
     {
       title: "Total Clients",
-      value: stats.totalClients.toLocaleString(),
+      value: stats.totalClients,
       icon: Users,
       iconClass: "blue",
     },
     {
       title: "Active Cases",
-      value: stats.activeCases.toLocaleString(),
+      value: stats.activeCases,
       icon: Briefcase,
       iconClass: "green",
     },
     {
       title: "Documents",
-      value: stats.totalDocuments.toLocaleString(),
+      value: stats.totalDocuments,
       icon: FileText,
       iconClass: "purple",
     },
     {
       title: "Monthly Revenue",
-      value: `$${stats.monthlyRevenue.toLocaleString()}`,
+      value: `$${stats.monthlyRevenue}`,
       icon: DollarSign,
       iconClass: "emerald",
     },
@@ -164,13 +155,11 @@ export function Dashboard({ user }) {
 
   return (
     <div className="container-fluid px-2 px-md-4">
-      {/* Header */}
       <div className="mb-4">
         <h2 className="fw-semibold text-dark">Dashboard</h2>
         <p className="text-muted">Overview of your law practice</p>
       </div>
 
-      {/* Stats Cards */}
       <div className="row mb-4">
         {(loading ? [1, 2, 3, 4] : statCards).map((stat, i) => {
           const Icon = !loading ? stat.icon : null;
@@ -197,7 +186,7 @@ export function Dashboard({ user }) {
                         className="fw-semibold text-dark mt-1"
                         style={{ fontSize: "24px" }}
                       >
-                        {stat.value}
+                        {stat.value.toLocaleString()}
                       </div>
                     </div>
                     <div className={`stat-icon ${stat.iconClass}`}>
@@ -211,9 +200,7 @@ export function Dashboard({ user }) {
         })}
       </div>
 
-      {/* Revenue Bar Chart & Appointments */}
       <div className="row">
-        {/* Revenue Bar Chart */}
         <div className="col-12 col-lg-6 mb-4">
           <div className="custom-card" style={{ minWidth: "260px" }}>
             <div className="custom-card-header">
@@ -243,7 +230,6 @@ export function Dashboard({ user }) {
           </div>
         </div>
 
-        {/* Upcoming Appointments */}
         <div className="col-12 col-lg-6 mb-4">
           <div className="custom-card" style={{ minWidth: "260px" }}>
             <div className="custom-card-header d-flex justify-content-between align-items-center">
@@ -253,7 +239,7 @@ export function Dashboard({ user }) {
               </h5>
               <button
                 className="btn btn-link btn-sm"
-                onClick={() => navigate("/calendar")}
+                onClick={() => onPageChange("calendar")}
               >
                 View All
               </button>
@@ -297,7 +283,6 @@ export function Dashboard({ user }) {
         </div>
       </div>
 
-      {/* Responsive tweaks */}
       <style>
         {`
           @media (max-width: 576px) {

@@ -20,9 +20,21 @@ export default function App() {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case "dashboard":
-        return <Dashboard user={user} searchQuery={searchQuery} />;
+        return (
+          <Dashboard
+            user={user}
+            searchQuery={searchQuery}
+            onPageChange={setCurrentPage}
+          />
+        );
       case "clients":
-        return <ClientsPage user={user} searchQuery={searchQuery} />;
+        return (
+          <ClientsPage
+            user={user}
+            searchQuery={searchQuery}
+            onPageChange={setCurrentPage}
+          />
+        );
       case "cases":
         return <CasesPage user={user} searchQuery={searchQuery} />;
       case "documents":
@@ -32,7 +44,13 @@ export default function App() {
       case "calendar":
         return <CalendarPage user={user} searchQuery={searchQuery} />;
       default:
-        return <Dashboard />;
+        return (
+          <Dashboard
+            user={user}
+            searchQuery={searchQuery}
+            onPageChange={setCurrentPage}
+          />
+        );
     }
   };
 

@@ -13,11 +13,11 @@ export function CalendarPage({ user }) {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [clientName, setClientName] = useState("");
-  const [status, setStatus] = useState("scheduled");
+  const [status, setStatus] = useState("scheduled"); // default always scheduled
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (user && user.uid) {
+    if (user?.uid) {
       firebaseService.setUserId(user.uid);
       loadAppointments();
     }
@@ -37,7 +37,7 @@ export function CalendarPage({ user }) {
   };
 
   const validateForm = () => {
-    let newErrors = {};
+    const newErrors = {};
     if (!title.trim()) newErrors.title = "Title is required";
     if (!date) newErrors.date = "Date is required";
     if (!time) newErrors.time = "Time is required";
@@ -50,18 +50,16 @@ export function CalendarPage({ user }) {
     if (!validateForm()) return;
 
     try {
-      // Always include userId
       const newAppointment = {
         title,
         date,
         time,
         clientName,
-        status,
+        status: selectedAppointment ? status : "scheduled", // force scheduled on create
         userId: user.uid,
       };
 
       if (selectedAppointment) {
-        // Update existing
         await firebaseService.update(
           "appointments",
           selectedAppointment.id,
@@ -73,7 +71,6 @@ export function CalendarPage({ user }) {
           )
         );
       } else {
-        // Create new
         const created = await firebaseService.create(
           "appointments",
           newAppointment
@@ -84,7 +81,7 @@ export function CalendarPage({ user }) {
         ]);
       }
 
-      // Reset form
+      // Reset
       setTitle("");
       setDate("");
       setTime("");
@@ -108,7 +105,7 @@ export function CalendarPage({ user }) {
     }
   };
 
-  // Group by date
+  // Group appointments by date
   const groupedAppointments = appointments.reduce((groups, appointment) => {
     const d = new Date(appointment.date).toDateString();
     if (!groups[d]) groups[d] = [];
@@ -150,82 +147,82 @@ export function CalendarPage({ user }) {
         </button>
       </div>
 
-      {/* Calendar View */}
+      {/* Appointments */}
       {Object.keys(groupedAppointments).length === 0 ? (
         <div className="alert alert-info">No appointments scheduled.</div>
       ) : (
-        <div>
-          {Object.entries(groupedAppointments).map(
-            ([date, dayAppointments]) => (
-              <div key={date} className="custom-card mb-4">
-                <div className="custom-card-header">
-                  <h5 className="mb-0 d-flex align-items-center">
-                    <Calendar size={20} className="me-2" />
-                    {date}
-                  </h5>
-                </div>
-                <div className="custom-card-body">
-                  {dayAppointments.map((appointment) => (
+        Object.entries(groupedAppointments).map(([date, dayAppointments]) => (
+          <div key={date} className="custom-card mb-4">
+            <div className="custom-card-header">
+              <h5 className="mb-0 d-flex align-items-center">
+                <Calendar size={20} className="me-2" />
+                {date}
+              </h5>
+            </div>
+            <div className="custom-card-body">
+              {dayAppointments.map((appointment) => (
+                <div
+                  key={appointment.id}
+                  className="d-flex align-items-center justify-content-between p-3 border rounded mb-2"
+                >
+                  <div>
+                    <h6 className="mb-1">{appointment.title}</h6>
                     <div
-                      key={appointment.id}
-                      className="d-flex align-items-center justify-content-between p-3 border rounded mb-2"
+                      className="d-flex align-items-center text-muted"
+                      style={{ fontSize: "14px" }}
                     >
-                      <div>
-                        <h6 className="mb-1">{appointment.title}</h6>
-                        <div
-                          className="d-flex align-items-center text-muted"
-                          style={{ fontSize: "14px" }}
-                        >
-                          <Clock size={16} className="me-1" />
-                          {appointment.time}
-                          {appointment.clientName && (
-                            <>
-                              <span className="mx-2">•</span>
-                              <User size={16} className="me-1" />
-                              {appointment.clientName}
-                            </>
-                          )}
-                        </div>
-                        <span className="badge bg-secondary mt-1">
-                          {appointment.status}
-                        </span>
-                      </div>
-                      <div className="d-flex gap-2">
-                        <button
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() => {
-                            setSelectedAppointment(appointment);
-                            setTitle(appointment.title);
-                            setDate(appointment.date);
-                            setTime(appointment.time);
-                            setClientName(appointment.clientName);
-                            setStatus(appointment.status);
-                            setShowModal(true);
-                          }}
-                        >
-                          <Edit size={14} className="me-1" />
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() =>
-                            handleDeleteAppointment(appointment.id)
-                          }
-                        >
-                          <Trash size={14} className="me-1" />
-                          Delete
-                        </button>
-                      </div>
+                      <Clock size={16} className="me-1" />
+                      {appointment.time}
+                      {appointment.clientName && (
+                        <>
+                          <span className="mx-2">•</span>
+                          <User size={16} className="me-1" />
+                          {appointment.clientName}
+                        </>
+                      )}
                     </div>
-                  ))}
+                    <span
+                      className={`badge mt-1 ${
+                        appointment.status === "scheduled"
+                          ? "bg-primary"
+                          : "bg-secondary"
+                      }`}
+                    >
+                      {appointment.status}
+                    </span>
+                  </div>
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => {
+                        setSelectedAppointment(appointment);
+                        setTitle(appointment.title);
+                        setDate(appointment.date);
+                        setTime(appointment.time);
+                        setClientName(appointment.clientName);
+                        setStatus(appointment.status);
+                        setShowModal(true);
+                      }}
+                    >
+                      <Edit size={14} className="me-1" />
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => handleDeleteAppointment(appointment.id)}
+                    >
+                      <Trash size={14} className="me-1" />
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )
-          )}
-        </div>
+              ))}
+            </div>
+          </div>
+        ))
       )}
 
-      {/* Modal (Create/Edit) */}
+      {/* Modal */}
       <div
         className={`modal fade${showModal ? " show d-block" : ""}`}
         style={showModal ? { background: "rgba(0,0,0,0.5)" } : {}}
@@ -293,18 +290,20 @@ export function CalendarPage({ user }) {
                     <small className="text-danger">{errors.clientName}</small>
                   )}
                 </div>
-                <div className="mb-3">
-                  <label className="form-label">Status</label>
-                  <select
-                    className="form-select"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                  >
-                    <option value="scheduled">Scheduled</option>
-                    <option value="completed">Completed</option>
-                    <option value="taken">Taken</option>
-                  </select>
-                </div>
+                {selectedAppointment && (
+                  <div className="mb-3">
+                    <label className="form-label">Status</label>
+                    <select
+                      className="form-select"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                    >
+                      <option value="scheduled">Scheduled</option>
+                      <option value="completed">Completed</option>
+                      <option value="taken">Taken</option>
+                    </select>
+                  </div>
+                )}
               </form>
             </div>
             <div className="modal-footer border-top">
