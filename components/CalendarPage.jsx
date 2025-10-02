@@ -2,19 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Calendar, Plus, Clock, User, Edit, Trash } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
-// =======================================================
-// CRUD Operations in CalendarPage.jsx
-// =======================================================
-// CREATE: handleSaveAppointment() - creates a new appointment if selectedAppointment is null
-//   - Uses firebaseService.create("appointments", newAppointment)
-// READ:   loadAppointments() - fetches all appointments
-//   - Uses firebaseService.getAll("appointments")
-// UPDATE: handleSaveAppointment() - updates appointment if selectedAppointment is set
-//   - Uses firebaseService.update("appointments", id, newAppointment)
-// DELETE: handleDeleteAppointment() - deletes an appointment
-//   - Uses firebaseService.delete("appointments", id)
-// =======================================================
-
 export function CalendarPage({ user }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
