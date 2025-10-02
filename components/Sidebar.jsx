@@ -51,7 +51,7 @@ export function Sidebar({
             fontWeight: "800",
             lineHeight: "1.2",
             background:
-              "linear-gradient(270deg, #2563eb, #0d0118ff, #03123bff)",
+              "linear-gradient(270deg, #2563eb, #f7f7f7ff, #6082e2ff)",
             backgroundSize: "600% 600%",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
@@ -63,6 +63,8 @@ export function Sidebar({
           Management System
         </span>
       </div>
+
+      <br />
 
       {/* Navigation Menu */}
       <nav className="flex-grow-1">
@@ -103,7 +105,6 @@ export function Sidebar({
         Logout
       </button>
 
-      {/* Gradient animation style */}
       <style>
         {`
           @keyframes gradientShift {

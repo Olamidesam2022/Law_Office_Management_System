@@ -7,6 +7,7 @@ export function LoginPage({ onLogin }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Firebase Auth: LOGIN - handleSubmit() authenticates a user
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -31,7 +32,6 @@ export function LoginPage({ onLogin }) {
       className="d-flex flex-column flex-md-row"
       style={{ minHeight: "100vh", background: "#f8fafc" }}
     >
-      {/* Left Side: Form */}
       <div className="d-flex flex-grow-1 justify-content-center align-items-center p-4">
         <form
           onSubmit={handleSubmit}

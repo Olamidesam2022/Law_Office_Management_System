@@ -2,6 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Briefcase, Plus, Search, Calendar, User } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
+// =======================================================
+// CRUD Operations in CasesPage.jsx
+// =======================================================
+// CREATE: handleAddCase() - Line ~54
+//   - Used in Add Case Modal (bottom of file) to create a new case
+// READ:   loadData() - Line ~32
+//   - Uses firebaseService.getAll("cases") and firebaseService.getAll("clients")
+//   - Called in useEffect on mount/user change
+// UPDATE: (Not implemented in this file)
+// DELETE: (Not implemented in this file)
+// =======================================================
+
 export function CasesPage({ user, searchQuery = "" }) {
   const [cases, setCases] = useState([]);
   const [clients, setClients] = useState([]);
@@ -32,6 +44,7 @@ export function CasesPage({ user, searchQuery = "" }) {
     setSearchTerm(searchQuery || "");
   }, [searchQuery]);
 
+  // CRUD: READ - loadData() fetches all cases and clients
   const loadData = async () => {
     try {
       setLoading(true);
@@ -48,6 +61,7 @@ export function CasesPage({ user, searchQuery = "" }) {
     }
   };
 
+  // CRUD: CREATE - handleAddCase() adds a new case
   const handleAddCase = async () => {
     try {
       const caseData = await firebaseService.create("cases", {

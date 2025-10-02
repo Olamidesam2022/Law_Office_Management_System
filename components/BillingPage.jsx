@@ -2,6 +2,19 @@ import React, { useState, useEffect } from "react";
 import { DollarSign, Plus, Search, Eye, Edit, Trash } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
+// =======================================================
+// CRUD Operations in BillingPage.jsx
+// =======================================================
+// CREATE: handleSaveInvoice() - adds a new invoice
+//   - Uses firebaseService.create("invoices", newInvoice)
+// READ:   loadInvoices() - fetches all invoices
+//   - Uses firebaseService.getAll("invoices")
+//   - Called in useEffect on mount/user change
+// UPDATE: (Edit functionality not implemented yet)
+// DELETE: handleDeleteInvoice() - deletes an invoice
+//   - Uses firebaseService.delete("invoices", id)
+// =======================================================
+
 export function BillingPage({ user, searchQuery = "" }) {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +46,7 @@ export function BillingPage({ user, searchQuery = "" }) {
     setSearchTerm(searchQuery || "");
   }, [searchQuery]);
 
+  // CRUD: READ - loadInvoices() fetches all invoices
   const loadInvoices = async () => {
     try {
       setLoading(true);
@@ -58,6 +72,7 @@ export function BillingPage({ user, searchQuery = "" }) {
     return Object.keys(newErrors).length === 0;
   };
 
+  // CRUD: CREATE - handleSaveInvoice() adds a new invoice
   const handleSaveInvoice = async () => {
     if (!validateForm()) return;
 
@@ -92,6 +107,7 @@ export function BillingPage({ user, searchQuery = "" }) {
     }
   };
 
+  // CRUD: DELETE - handleDeleteInvoice() deletes an invoice
   const handleDeleteInvoice = async (id) => {
     try {
       await firebaseService.delete("invoices", id);

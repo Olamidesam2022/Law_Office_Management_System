@@ -38,6 +38,7 @@ export function Dashboard({ user, onPageChange }) {
     }
   }, [user]);
 
+  // CRUD: READ - loadDashboardData() fetches stats
   const loadDashboardData = async () => {
     try {
       setLoading(true);
@@ -74,6 +75,7 @@ export function Dashboard({ user, onPageChange }) {
     }
   };
 
+  // CRUD: READ - loadAppointments() fetches appointments
   const loadAppointments = async () => {
     try {
       const appts = await firebaseService.getAll("appointments");
@@ -92,6 +94,7 @@ export function Dashboard({ user, onPageChange }) {
     }
   };
 
+  // CRUD: UPDATE - markComplete() updates appointment status
   const markComplete = async (id) => {
     try {
       await firebaseService.update("appointments", id, { status: "completed" });
@@ -101,6 +104,7 @@ export function Dashboard({ user, onPageChange }) {
     }
   };
 
+  // CRUD: READ - loadRevenueData() fetches invoices for chart
   const loadRevenueData = async () => {
     try {
       const invoices = await firebaseService.getAll("invoices");

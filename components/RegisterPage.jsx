@@ -9,6 +9,7 @@ export function RegisterPage({ onRegister }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Firebase Auth: REGISTER - handleSubmit() registers a new user
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password) {

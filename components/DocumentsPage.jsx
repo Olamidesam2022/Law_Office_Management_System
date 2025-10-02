@@ -2,6 +2,17 @@ import React, { useState, useEffect } from "react";
 import { FileText, Upload, Download } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
+// =======================================================
+// CRUD Operations in DocumentsPage.jsx
+// =======================================================
+// READ:   loadDocuments() - fetches all documents
+//   - Uses firebaseService.getAll("documents")
+//   - Called in useEffect on mount/user change
+// CREATE: (Upload Modal UI present, but actual upload logic not implemented)
+// UPDATE: (Not implemented in this file)
+// DELETE: (Not implemented in this file)
+// =======================================================
+
 export function DocumentsPage({ user, searchQuery = "" }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +31,7 @@ export function DocumentsPage({ user, searchQuery = "" }) {
     setSearchTerm(searchQuery || "");
   }, [searchQuery]);
 
+  // CRUD: READ - loadDocuments() fetches all documents
   const loadDocuments = async () => {
     try {
       setLoading(true);

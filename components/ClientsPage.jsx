@@ -2,6 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Users, Plus, Search, Mail, Phone } from "lucide-react";
 import { firebaseService } from "../firebase/services.js";
 
+// =======================================================
+// CRUD Operations in ClientsPage.jsx
+// =======================================================
+// CREATE: handleAddClient() - adds a new client
+//   - Uses firebaseService.create("clients", newClient)
+// READ:   loadClients() - fetches all clients
+//   - Uses firebaseService.getAll("clients")
+//   - Called in useEffect on mount/user change
+// UPDATE: (Not implemented in this file)
+// DELETE: (Not implemented in this file)
+// =======================================================
+
 export function ClientsPage({ user, searchQuery = "" }) {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +43,7 @@ export function ClientsPage({ user, searchQuery = "" }) {
     setSearchTerm(searchQuery || "");
   }, [searchQuery]);
 
+  // CRUD: READ - loadClients() fetches all clients
   const loadClients = async () => {
     try {
       setLoading(true);
@@ -43,6 +56,7 @@ export function ClientsPage({ user, searchQuery = "" }) {
     }
   };
 
+  // CRUD: CREATE - handleAddClient() adds a new client
   const handleAddClient = async () => {
     try {
       const client = await firebaseService.create("clients", {
