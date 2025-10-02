@@ -23,7 +23,7 @@ export function Dashboard({ user, onPageChange }) {
     totalClients: 0,
     activeCases: 0,
     totalDocuments: 0,
-    monthlyRevenue: 0,
+    dailyRevenue: 0, // changed from monthlyRevenue
   });
   const [appointments, setAppointments] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
@@ -51,14 +51,13 @@ export function Dashboard({ user, onPageChange }) {
 
       const activeCases = cases.filter((c) => c.status !== "closed").length;
 
-      const monthlyRevenue = invoices
+      // Calculate today's revenue
+      const todayStr = new Date().toISOString().split("T")[0];
+      const dailyRevenue = invoices
         .filter((invoice) => {
-          const date = new Date(invoice.date);
-          const now = new Date();
-          return (
-            date.getMonth() === now.getMonth() &&
-            date.getFullYear() === now.getFullYear()
-          );
+          if (!invoice.date) return false;
+          const dateStr = new Date(invoice.date).toISOString().split("T")[0];
+          return dateStr === todayStr;
         })
         .reduce((sum, inv) => sum + (inv.amount || 0), 0);
 
@@ -66,7 +65,7 @@ export function Dashboard({ user, onPageChange }) {
         totalClients: clients.length,
         activeCases,
         totalDocuments: documents.length,
-        monthlyRevenue,
+        dailyRevenue,
       });
     } catch (err) {
       console.error("Error loading stats:", err);
@@ -108,21 +107,21 @@ export function Dashboard({ user, onPageChange }) {
   const loadRevenueData = async () => {
     try {
       const invoices = await firebaseService.getAll("invoices");
-      const monthlyMap = {};
+      const dailyMap = {};
 
       invoices.forEach((inv) => {
         if (!inv.date || !inv.amount) return;
         const d = new Date(inv.date);
-        const key = `${d.toLocaleString("default", {
-          month: "short",
-        })} ${d.getFullYear()}`;
-        monthlyMap[key] = (monthlyMap[key] || 0) + inv.amount;
+        const key = d.toISOString().split("T")[0]; // YYYY-MM-DD
+        dailyMap[key] = (dailyMap[key] || 0) + inv.amount;
       });
 
+      // Sort by date ascending
+      const sortedKeys = Object.keys(dailyMap).sort();
       setRevenueData(
-        Object.keys(monthlyMap).map((m) => ({
-          month: m,
-          revenue: monthlyMap[m],
+        sortedKeys.map((date) => ({
+          day: date,
+          revenue: dailyMap[date],
         }))
       );
     } catch (err) {
@@ -150,8 +149,8 @@ export function Dashboard({ user, onPageChange }) {
       iconClass: "purple",
     },
     {
-      title: "Monthly Revenue",
-      value: `$${stats.monthlyRevenue}`,
+      title: "Daily Revenue", // changed label
+      value: `$${stats.dailyRevenue}`,
       icon: DollarSign,
       iconClass: "emerald",
     },
@@ -208,14 +207,14 @@ export function Dashboard({ user, onPageChange }) {
         <div className="col-12 col-lg-6 mb-4">
           <div className="custom-card" style={{ minWidth: "260px" }}>
             <div className="custom-card-header">
-              <h5 className="mb-0">Monthly Revenue</h5>
+              <h5 className="mb-0">Daily Revenue</h5>
             </div>
             <div className="custom-card-body" style={{ height: "320px" }}>
               {revenueData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={revenueData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
+                    <XAxis dataKey="day" />
                     <YAxis />
                     <Tooltip />
                     <Bar

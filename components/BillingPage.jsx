@@ -34,6 +34,10 @@ export function BillingPage({ user, searchQuery = "" }) {
   // View modal state
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingInvoiceId, setEditingInvoiceId] = useState(null);
+
   useEffect(() => {
     if (user && user.uid) {
       firebaseService.setUserId(user.uid);
@@ -72,7 +76,7 @@ export function BillingPage({ user, searchQuery = "" }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  // CRUD: CREATE - handleSaveInvoice() adds a new invoice
+  // CRUD: CREATE or UPDATE - handleSaveInvoice() adds or updates an invoice
   const handleSaveInvoice = async () => {
     if (!validateForm()) return;
 
@@ -85,14 +89,26 @@ export function BillingPage({ user, searchQuery = "" }) {
         status,
       };
 
-      const createdInvoice = await firebaseService.create(
-        "invoices",
-        newInvoice
-      );
-      const savedInvoice = { id: createdInvoice.id, ...newInvoice };
+      if (isEditMode && editingInvoiceId) {
+        // UPDATE
+        await firebaseService.update("invoices", editingInvoiceId, newInvoice);
+        setInvoices((prev) =>
+          prev.map((inv) =>
+            inv.id === editingInvoiceId ? { ...inv, ...newInvoice } : inv
+          )
+        );
+        setHighlightedId(editingInvoiceId);
+      } else {
+        // CREATE
+        const createdInvoice = await firebaseService.create(
+          "invoices",
+          newInvoice
+        );
+        const savedInvoice = { id: createdInvoice.id, ...newInvoice };
+        setInvoices((prev) => [savedInvoice, ...prev]);
+        setHighlightedId(createdInvoice.id);
+      }
 
-      setInvoices((prev) => [savedInvoice, ...prev]);
-      setHighlightedId(createdInvoice.id);
       setTimeout(() => setHighlightedId(null), 3000);
 
       setClientName("");
@@ -102,9 +118,25 @@ export function BillingPage({ user, searchQuery = "" }) {
       setStatus("pending");
       setErrors({});
       setShowModal(false);
+      setIsEditMode(false);
+      setEditingInvoiceId(null);
     } catch (error) {
       console.error("Error saving invoice:", error);
     }
+  };
+
+  // Handle Edit button click
+  const handleEditInvoice = (invoice) => {
+    setClientName(invoice.clientName || "");
+    setInvoiceNumber(invoice.invoiceNumber || "");
+    setAmount(invoice.amount || "");
+    setDate(invoice.date || "");
+    setStatus(invoice.status || "pending");
+    setIsEditMode(true);
+    setEditingInvoiceId(invoice.id);
+    setShowModal(true);
+    setErrors({});
+    setSelectedInvoice(null);
   };
 
   // CRUD: DELETE - handleDeleteInvoice() deletes an invoice
@@ -280,6 +312,13 @@ export function BillingPage({ user, searchQuery = "" }) {
                       <Eye size={16} className="me-1" />
                       View
                     </button>
+                    <button
+                      className="btn btn-outline-secondary btn-sm ms-2"
+                      onClick={() => handleEditInvoice(invoice)}
+                    >
+                      <Edit size={16} className="me-1" />
+                      Edit
+                    </button>
                   </div>
                 </div>
               </div>
@@ -288,7 +327,7 @@ export function BillingPage({ user, searchQuery = "" }) {
         </div>
       )}
 
-      {/* Modal for Create Invoice */}
+      {/* Modal for Create/Edit Invoice */}
       <div
         className={`modal fade${showModal ? " show d-block" : ""}`}
         tabIndex="-1"
@@ -301,12 +340,19 @@ export function BillingPage({ user, searchQuery = "" }) {
         >
           <div className="modal-content">
             <div className="modal-header border-bottom">
-              <h5 className="modal-title">Create Invoice</h5>
+              <h5 className="modal-title">
+                {isEditMode ? "Edit Invoice" : "Create Invoice"}
+              </h5>
               <button
                 type="button"
                 className="btn-close"
                 aria-label="Close"
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  setIsEditMode(false);
+                  setEditingInvoiceId(null);
+                  setErrors({});
+                }}
               ></button>
             </div>
             <div className="modal-body">
@@ -379,7 +425,12 @@ export function BillingPage({ user, searchQuery = "" }) {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  setIsEditMode(false);
+                  setEditingInvoiceId(null);
+                  setErrors({});
+                }}
               >
                 Cancel
               </button>
@@ -388,7 +439,7 @@ export function BillingPage({ user, searchQuery = "" }) {
                 className="btn btn-primary"
                 onClick={handleSaveInvoice}
               >
-                Save Invoice
+                {isEditMode ? "Update Invoice" : "Save Invoice"}
               </button>
             </div>
           </div>
@@ -452,7 +503,7 @@ export function BillingPage({ user, searchQuery = "" }) {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={() => alert("Edit functionality coming soon!")}
+                  onClick={() => handleEditInvoice(selectedInvoice)}
                 >
                   <Edit size={16} className="me-1" /> Edit
                 </button>
