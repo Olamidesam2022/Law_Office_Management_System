@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabaseService } from "./supabase/services";
 
 import { LoginPage } from "./components/LoginPage";
 import { RegisterPage } from "./components/RegisterPage";
@@ -16,6 +17,25 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  
+  // Check for existing session on load
+  useEffect(() => {
+    async function checkUser() {
+      try {
+        const currentUser = await supabaseService.getCurrentUser();
+        if (currentUser) {
+          setUser({ uid: currentUser.id, email: currentUser.email });
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    checkUser();
+  }, []);
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -65,9 +85,14 @@ export default function App() {
     return <LoginPage onLogin={setUser} />;
   }
 
-  const handleLogout = () => {
-    setUser(null);
-    setShowRegister(false);
+  const handleLogout = async () => {
+    try {
+      await supabaseService.signOut();
+      setUser(null);
+      setShowRegister(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (

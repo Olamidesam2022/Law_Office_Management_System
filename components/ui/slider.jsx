@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as SliderPrimitive from "@radix-ui/react-slider@1.2.3";
+import * as SliderPrimitive from "@radix-ui/react-slider";
 
 import { cn } from "./utils";
 
@@ -13,13 +13,11 @@ function Slider({
   max = 100,
   ...props
 }) {
-  const _values = React.useMemo(
-    () =>
-      Array.isArray(value)
-        ? value
-        (defaultValue)
-          ? defaultValue
-          );
+  const _values = React.useMemo(() => {
+    if (Array.isArray(value)) return value;
+    if (Array.isArray(defaultValue)) return defaultValue;
+    return undefined;
+  }, [value, defaultValue]);
 
   return (
     <SliderPrimitive.Root
@@ -47,7 +45,7 @@ function Slider({
           )}
         />
       </SliderPrimitive.Track>
-      {Array.from({ length(_, index) => (
+      {Array.from({ length: Array.isArray(_values) ? _values.length : 1 }).map((_, index) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}

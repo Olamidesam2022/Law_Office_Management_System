@@ -7,7 +7,7 @@ import {
   Calendar,
   CheckCircle,
 } from "lucide-react";
-import { firebaseService } from "../firebase/services.js";
+import { supabaseService } from "../supabase/services.js";
 import {
   BarChart,
   Bar,
@@ -31,7 +31,7 @@ export function Dashboard({ user, onPageChange }) {
 
   useEffect(() => {
     if (user?.uid) {
-      firebaseService.setUserId(user.uid);
+      supabaseService.userId = user.uid;
       loadDashboardData();
       loadAppointments();
       loadRevenueData();
@@ -43,10 +43,10 @@ export function Dashboard({ user, onPageChange }) {
     try {
       setLoading(true);
       const [clients, cases, documents, invoices] = await Promise.all([
-        firebaseService.getAll("clients"),
-        firebaseService.getAll("cases"),
-        firebaseService.getAll("documents"),
-        firebaseService.getAll("invoices"),
+        supabaseService.getAll("clients"),
+        supabaseService.getAll("cases"),
+        supabaseService.getAll("documents"),
+        supabaseService.getAll("billing"),
       ]);
 
       const activeCases = cases.filter((c) => c.status !== "closed").length;
@@ -106,7 +106,7 @@ export function Dashboard({ user, onPageChange }) {
   // CRUD: READ - loadRevenueData() fetches invoices for chart
   const loadRevenueData = async () => {
     try {
-      const invoices = await firebaseService.getAll("invoices");
+      const invoices = await supabaseService.getAll("billing");
       const dailyMap = {};
 
       invoices.forEach((inv) => {

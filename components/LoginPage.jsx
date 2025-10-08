@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { auth } from "../firebase/config.js";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { supabaseService } from "../supabase/services.js";
 
 export function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Firebase Auth: LOGIN - handleSubmit() authenticates a user
+  // Supabase Auth: LOGIN - handleSubmit() authenticates a user
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -15,13 +14,8 @@ export function LoginPage({ onLogin }) {
       return;
     }
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-      onLogin({ uid: user.uid, email: user.email });
+      const { user } = await supabaseService.signIn(email, password);
+      onLogin({ uid: user.id, email: user.email });
     } catch (err) {
       setError("Invalid email or password.");
     }

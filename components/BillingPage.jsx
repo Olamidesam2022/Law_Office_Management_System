@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { DollarSign, Plus, Search, Eye, Edit, Trash } from "lucide-react";
-import { firebaseService } from "../firebase/services.js";
+import { supabaseService } from "../supabase/services.js";
 
 // =======================================================
 // CRUD Operations in BillingPage.jsx
@@ -40,7 +40,7 @@ export function BillingPage({ user, searchQuery = "" }) {
 
   useEffect(() => {
     if (user && user.uid) {
-      firebaseService.setUserId(user.uid);
+      supabaseService.userId = user.uid;
       loadInvoices();
     }
     // eslint-disable-next-line
@@ -54,7 +54,7 @@ export function BillingPage({ user, searchQuery = "" }) {
   const loadInvoices = async () => {
     try {
       setLoading(true);
-      const invoicesData = await firebaseService.getAll("invoices");
+      const invoicesData = await supabaseService.getAll("billing");
       setInvoices(invoicesData);
     } catch (error) {
       console.error("Error loading invoices:", error);
@@ -82,28 +82,20 @@ export function BillingPage({ user, searchQuery = "" }) {
 
     try {
       const newInvoice = {
-        clientName,
-        invoiceNumber,
         amount: parseFloat(amount),
-        date,
+        due_date: date || null,
         status,
+        notes: [clientName, invoiceNumber].filter(Boolean).join(" | ") || null,
       };
 
       if (isEditMode && editingInvoiceId) {
         // UPDATE
-        await firebaseService.update("invoices", editingInvoiceId, newInvoice);
-        setInvoices((prev) =>
-          prev.map((inv) =>
-            inv.id === editingInvoiceId ? { ...inv, ...newInvoice } : inv
-          )
-        );
+        await supabaseService.update("billing", editingInvoiceId, newInvoice);
+        setInvoices((prev) => prev.map((inv) => (inv.id === editingInvoiceId ? { ...inv, ...newInvoice } : inv)));
         setHighlightedId(editingInvoiceId);
       } else {
         // CREATE
-        const createdInvoice = await firebaseService.create(
-          "invoices",
-          newInvoice
-        );
+        const createdInvoice = await supabaseService.create("billing", newInvoice);
         const savedInvoice = { id: createdInvoice.id, ...newInvoice };
         setInvoices((prev) => [savedInvoice, ...prev]);
         setHighlightedId(createdInvoice.id);
@@ -142,7 +134,7 @@ export function BillingPage({ user, searchQuery = "" }) {
   // CRUD: DELETE - handleDeleteInvoice() deletes an invoice
   const handleDeleteInvoice = async (id) => {
     try {
-      await firebaseService.delete("invoices", id);
+      await supabaseService.delete("billing", id);
       setInvoices((prev) => prev.filter((inv) => inv.id !== id));
       setSelectedInvoice(null);
     } catch (error) {
@@ -163,11 +155,7 @@ export function BillingPage({ user, searchQuery = "" }) {
     }
   };
 
-  const filteredInvoices = invoices.filter(
-    (invoice) =>
-      invoice.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredInvoices = invoices.filter((invoice) => (invoice.notes || "").toLowerCase().includes(searchTerm.toLowerCase()));
 
   if (loading) {
     return (
@@ -284,8 +272,8 @@ export function BillingPage({ user, searchQuery = "" }) {
               <div className="custom-card-body">
                 <div className="row align-items-center">
                   <div className="col-12 col-md-3">
-                    <h6 className="mb-1">{invoice.invoiceNumber}</h6>
-                    <small className="text-muted">{invoice.clientName}</small>
+                    <h6 className="mb-1">{invoice.notes || "Invoice"}</h6>
+                    <small className="text-muted">{invoice.status}</small>
                   </div>
                   <div className="col-12 col-md-2 mt-2 mt-md-0">
                     <div className="fw-semibold">
@@ -294,7 +282,7 @@ export function BillingPage({ user, searchQuery = "" }) {
                   </div>
                   <div className="col-12 col-md-2 mt-2 mt-md-0">
                     <small className="text-muted">
-                      {new Date(invoice.date).toLocaleDateString()}
+                      {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "-"}
                     </small>
                   </div>
                   <div className="col-12 col-md-2 mt-2 mt-md-0">
@@ -467,22 +455,17 @@ export function BillingPage({ user, searchQuery = "" }) {
               </div>
               <div className="modal-body">
                 <p>
-                  <strong>Invoice Number:</strong>{" "}
-                  {selectedInvoice.invoiceNumber}
+                  <strong>Notes:</strong> {selectedInvoice.notes || "-"}
                 </p>
                 <p>
-                  <strong>Client:</strong> {selectedInvoice.clientName}
+                  <strong>Status:</strong> {selectedInvoice.status}
                 </p>
                 <p>
                   <strong>Amount:</strong> $
                   {selectedInvoice.amount?.toLocaleString()}
                 </p>
                 <p>
-                  <strong>Date:</strong>{" "}
-                  {new Date(selectedInvoice.date).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Status:</strong> {selectedInvoice.status}
+                  <strong>Due Date:</strong> {selectedInvoice.due_date ? new Date(selectedInvoice.due_date).toLocaleDateString() : "-"}
                 </p>
               </div>
               <div className="modal-footer border-top">

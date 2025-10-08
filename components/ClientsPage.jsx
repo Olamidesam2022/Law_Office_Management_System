@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Users, Plus, Search, Mail, Phone } from "lucide-react";
-import { firebaseService } from "../firebase/services.js";
+import { supabaseService } from "../supabase/services.js";
 
 // =======================================================
 // CRUD Operations in ClientsPage.jsx
 // =======================================================
 // CREATE: handleAddClient() - adds a new client
-//   - Uses firebaseService.create("clients", newClient)
+//   - Uses supabaseService.create("clients", newClient)
 // READ:   loadClients() - fetches all clients
-//   - Uses firebaseService.getAll("clients")
+//   - Uses supabaseService.getAll("clients")
 //   - Called in useEffect on mount/user change
 // UPDATE: (Not implemented in this file)
 // DELETE: (Not implemented in this file)
@@ -29,7 +29,7 @@ export function ClientsPage({ user, searchQuery = "" }) {
 
   useEffect(() => {
     if (user && user.uid) {
-      firebaseService.setUserId(user.uid);
+      supabaseService.userId = user.uid;
       loadClients();
     }
     // eslint-disable-next-line
@@ -47,7 +47,7 @@ export function ClientsPage({ user, searchQuery = "" }) {
   const loadClients = async () => {
     try {
       setLoading(true);
-      const clientsData = await firebaseService.getAll("clients");
+      const clientsData = await supabaseService.getAll("clients");
       setClients(clientsData);
     } catch (error) {
       console.error("Error loading clients:", error);
@@ -59,9 +59,8 @@ export function ClientsPage({ user, searchQuery = "" }) {
   // CRUD: CREATE - handleAddClient() adds a new client
   const handleAddClient = async () => {
     try {
-      const client = await firebaseService.create("clients", {
+      const client = await supabaseService.create("clients", {
         ...newClient,
-        userId: user.uid,
       });
       setClients([...clients, client]);
       setNewClient({

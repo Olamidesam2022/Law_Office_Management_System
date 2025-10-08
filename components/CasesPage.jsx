@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Briefcase, Plus, Search, Calendar, User } from "lucide-react";
-import { firebaseService } from "../firebase/services.js";
+import { supabaseService } from "../supabase/services.js";
 
 // =======================================================
 // CRUD Operations in CasesPage.jsx
@@ -33,7 +33,7 @@ export function CasesPage({ user, searchQuery = "" }) {
 
   useEffect(() => {
     if (user && user.uid) {
-      firebaseService.setUserId(user.uid);
+      supabaseService.userId = user.uid;
       loadData();
     }
     // eslint-disable-next-line
@@ -49,8 +49,8 @@ export function CasesPage({ user, searchQuery = "" }) {
     try {
       setLoading(true);
       const [casesData, clientsData] = await Promise.all([
-        firebaseService.getAll("cases"),
-        firebaseService.getAll("clients"),
+        supabaseService.getAll("cases"),
+        supabaseService.getAll("clients"),
       ]);
       setCases(casesData);
       setClients(clientsData);
@@ -64,9 +64,14 @@ export function CasesPage({ user, searchQuery = "" }) {
   // CRUD: CREATE - handleAddCase() adds a new case
   const handleAddCase = async () => {
     try {
-      const caseData = await firebaseService.create("cases", {
-        ...newCase,
-        userId: user.uid,
+      const caseData = await supabaseService.create("cases", {
+        title: newCase.title,
+        client_id: newCase.clientId,
+        type: newCase.type || null,
+        status: newCase.status || "active",
+        priority: newCase.priority || "medium",
+        description: newCase.description || null,
+        due_date: newCase.deadline || null,
       });
       setCases([...cases, caseData]);
       setNewCase({
@@ -228,7 +233,7 @@ export function CasesPage({ user, searchQuery = "" }) {
       ) : (
         <div className="overflow-auto">
           {filteredCases.map((caseItem) => {
-            const client = clients.find((c) => c.id === caseItem.clientId);
+            const client = clients.find((c) => c.id === (caseItem.client_id || caseItem.clientId));
             return (
               <div
                 key={caseItem.id}
@@ -254,10 +259,10 @@ export function CasesPage({ user, searchQuery = "" }) {
                             {caseItem.type}
                           </span>
                         )}
-                        {caseItem.deadline && (
+                        {(caseItem.due_date || caseItem.deadline) && (
                           <div className="d-flex align-items-center">
                             <Calendar size={16} className="me-1" />
-                            {new Date(caseItem.deadline).toLocaleDateString()}
+                            {new Date(caseItem.due_date || caseItem.deadline).toLocaleDateString()}
                           </div>
                         )}
                       </div>

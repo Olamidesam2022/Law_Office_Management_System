@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { auth } from "../firebase/config.js";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { supabaseService } from "../supabase/services.js";
 
 export function RegisterPage({ onRegister }) {
   const [name, setName] = useState("");
@@ -9,35 +8,22 @@ export function RegisterPage({ onRegister }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Firebase Auth: REGISTER - handleSubmit() registers a new user
+  // Supabase Auth: REGISTER - handleSubmit() creates a new user
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password) {
-      setError("Please enter name, email and password.");
-      return;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      setError("Please enter a valid email address.");
+      setError("Please fill in all fields");
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Passwords do not match");
       return;
     }
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-      onRegister({ uid: user.uid, email: user.email, name });
+      await supabaseService.signUp(email, password, { name });
+      onRegister();
     } catch (err) {
-      if (err.code === "auth/email-already-in-use") {
-        setError("User already exists with this email.");
-      } else {
-        setError("Registration failed. Please try again.");
-      }
+      setError(err.message || "Error creating account");
     }
   };
 

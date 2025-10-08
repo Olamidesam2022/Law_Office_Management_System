@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, Plus, Clock, User, Edit, Trash } from "lucide-react";
-import { firebaseService } from "../firebase/services.js";
+import { supabaseService } from "../supabase/services.js";
 
 export function CalendarPage({ user }) {
   const [appointments, setAppointments] = useState([]);
@@ -18,7 +18,7 @@ export function CalendarPage({ user }) {
 
   useEffect(() => {
     if (user?.uid) {
-      firebaseService.setUserId(user.uid);
+      supabaseService.userId = user.uid;
       loadAppointments();
     }
     // eslint-disable-next-line
@@ -28,7 +28,7 @@ export function CalendarPage({ user }) {
   const loadAppointments = async () => {
     try {
       setLoading(true);
-      const data = await firebaseService.getAll("appointments");
+      const data = await supabaseService.getAll("calendar_events");
       setAppointments(data);
     } catch (error) {
       console.error("Error loading appointments:", error);
@@ -54,29 +54,21 @@ export function CalendarPage({ user }) {
     try {
       const newAppointment = {
         title,
-        date,
-        time,
-        clientName,
-        status: selectedAppointment ? status : "scheduled", // force scheduled on create
-        userId: user.uid,
+        description: clientName || null,
+        starts_at: date && time ? new Date(`${date}T${time}:00Z`).toISOString() : null,
+        ends_at: null,
+        completed: selectedAppointment ? status === "completed" : false,
       };
 
       if (selectedAppointment) {
-        await firebaseService.update(
-          "appointments",
-          selectedAppointment.id,
-          newAppointment
-        );
+        await supabaseService.update("calendar_events", selectedAppointment.id, newAppointment);
         setAppointments((prev) =>
           prev.map((a) =>
             a.id === selectedAppointment.id ? { ...a, ...newAppointment } : a
           )
         );
       } else {
-        const created = await firebaseService.create(
-          "appointments",
-          newAppointment
-        );
+        const created = await supabaseService.create("calendar_events", newAppointment);
         setAppointments((prev) => [
           { id: created.id, ...newAppointment },
           ...prev,
@@ -100,7 +92,7 @@ export function CalendarPage({ user }) {
   // CRUD: DELETE - handleDeleteAppointment() deletes an appointment
   const handleDeleteAppointment = async (id) => {
     try {
-      await firebaseService.delete("appointments", id);
+      await supabaseService.delete("calendar_events", id);
       setAppointments((prev) => prev.filter((a) => a.id !== id));
       setSelectedAppointment(null);
     } catch (error) {
@@ -110,7 +102,7 @@ export function CalendarPage({ user }) {
 
   // Group appointments by date
   const groupedAppointments = appointments.reduce((groups, appointment) => {
-    const d = new Date(appointment.date).toDateString();
+    const d = new Date(appointment.starts_at || appointment.date).toDateString();
     if (!groups[d]) groups[d] = [];
     groups[d].push(appointment);
     return groups;

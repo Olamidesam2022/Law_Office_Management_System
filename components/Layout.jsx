@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopNavbar } from "./TopNavbar";
-import { firebaseService } from "../firebase/services.js";
+import { supabaseService } from "../supabase/services.js";
 
 export function Layout({
   children,
@@ -21,18 +21,24 @@ export function Layout({
   const [client, setClient] = useState("");
   const [caseType, setCaseType] = useState("");
 
-  // Save case to Firestore
+  // Save case using Supabase
   const handleAddCase = async () => {
     if (!caseTitle.trim()) {
       alert("Case title is required!");
       return;
     }
     try {
-      await firebaseService.add("cases", {
+      if (user?.uid) {
+        supabaseService.userId = user.uid;
+      }
+      await supabaseService.create("cases", {
         title: caseTitle,
-        client,
-        type: caseType,
-        createdAt: new Date().toISOString(),
+        client_id: null,
+        type: caseType || null,
+        status: "active",
+        priority: "medium",
+        description: null,
+        due_date: null,
       });
       alert("Case added successfully!");
       // reset form + close modal

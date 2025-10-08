@@ -4,7 +4,7 @@
 
 This project is a **Law Office Management Web Application** developed as part of a comprehensive school project. The primary goal of this system is to **digitally transform legal office operations** by enabling lawyers, paralegals, and administrative staff to manage clients, cases, appointments, and legal documents in a **secure, user-friendly, and efficient manner**.
 
-Traditionally, many law offices rely on manual record-keeping methods, such as physical files and ledgers. While these methods have worked for decades, they are prone to errors, loss, and inefficiencies. This project aims to showcase how **modern technology (React, Vite, Firebase)** can be leveraged to digitize and automate legal operations while ensuring data security and accessibility.
+Traditionally, many law offices rely on manual record-keeping methods, such as physical files and ledgers. While these methods have worked for decades, they are prone to errors, loss, and inefficiencies. This project aims to showcase how **modern technology (React, Vite, Supabase)** can be leveraged to digitize and automate legal operations while ensuring data security and accessibility.
 
 This README provides an **extensive and detailed explanation** of the project. It includes the purpose, objectives, features, technical implementation, installation steps, usage guide, and areas for future development. This makes it a **comprehensive school project documentation** that demonstrates both technical knowledge and problem-solving skills.
 
@@ -17,7 +17,7 @@ This README provides an **extensive and detailed explanation** of the project. I
 3. **Boost Productivity** – Automate repetitive administrative tasks such as client intake, case updates, and scheduling.
 4. **Data Security & Compliance** – Ensure sensitive client data is protected with authentication and encryption mechanisms.
 5. **Scalability & Flexibility** – Design a system that can grow with the needs of law firms, from small practices to large firms.
-6. **Educational Value** – Demonstrate mastery of modern frontend frameworks (React, Vite) and backend services (Firebase) in solving real-world problems.
+6. **Educational Value** – Demonstrate mastery of modern frontend frameworks (React, Vite) and backend services (Supabase) in solving real-world problems.
 
 ---
 
@@ -27,7 +27,7 @@ The application includes a wide variety of features designed to meet the specifi
 
 ### 🔑 Authentication & User Management
 
-- Secure login and signup using **Firebase Authentication**.
+- Secure login and signup using **Supabase Auth**.
 - Role-based access control for Admins, Lawyers, and Assistants.
 - Password reset and account recovery mechanisms.
 - Session management to ensure security.
@@ -57,7 +57,7 @@ The application includes a wide variety of features designed to meet the specifi
 ### 📂 Document Management
 
 - Upload and categorize legal documents (PDF, Word, Images).
-- Secure cloud storage using **Firebase Storage**.
+- Secure cloud storage using **Supabase Storage**.
 - View and download documents directly from the app.
 - Tagging and version control for document updates.
 
@@ -93,9 +93,9 @@ The application includes a wide variety of features designed to meet the specifi
 
 ### Backend & Database
 
-- **Firebase Authentication** – Provides secure user authentication and session handling.
-- **Firebase Firestore** – NoSQL cloud database for structured data storage.
-- **Firebase Storage** – Secure file storage for legal documents.
+- **Supabase Auth** – Secure user authentication and session handling.
+- **Supabase Postgres** – Managed Postgres database with Row Level Security (RLS).
+- **Supabase Storage** – Secure object storage for legal documents.
 
 ### Development Tools
 
@@ -108,15 +108,14 @@ The application includes a wide variety of features designed to meet the specifi
 ## 📂 Project Structure
 
 ```
-Law-Office-Scratch/
+Law_Office_Management_System/
 │── index.html              # Entry point for the web app
 │── main.jsx                # React root entry
-│── App.jsx                 # Main application component
+│── App (1).jsx             # Main application component
 │── components/             # Reusable React components (Forms, Navbar, etc.)
-│── styles/                 # CSS/Tailwind stylesheets
-│── firebase/               # Firebase services and configurations
-│── public/                 # Static assets (logos, icons, etc.)
-│── dist/                   # Production build output
+│── styles/                 # CSS stylesheets
+│── supabase/               # Supabase client and service layer
+│── public/                 # Static assets (images, icons, etc.)
 │── package.json            # Dependencies and project scripts
 │── vite.config.js          # Vite build configuration
 │── eslint.config.js        # ESLint configuration for code quality
@@ -141,13 +140,19 @@ cd Law-Office-Scratch
 npm install
 ```
 
-### 3️⃣ Firebase Setup
+### 3️⃣ Supabase Setup
 
-- Go to [Firebase Console](https://console.firebase.google.com/) and create a new project.
-- Enable **Authentication** (Email/Password provider).
-- Create a **Cloud Firestore** database.
-- Set up **Firebase Storage** for documents.
-- Obtain the configuration details and paste them into `firebase/config.js`.
+- Go to [Supabase Dashboard](https://supabase.com/dashboard) and create a new project.
+- In Project Settings > API, copy your `Project URL` and `anon` public API key.
+- Create a `.env` file and add:
+
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+- In the SQL editor, create the tables and policies (clients, cases, documents, billing, calendar_events) as per the provided migration in this README/discussion.
+- In Storage, create a bucket named `documents` (public) or make it private and use signed URLs.
 
 ### 4️⃣ Run the Development Server
 
@@ -185,7 +190,7 @@ This project was undertaken as part of an academic course to demonstrate:
 
 - Application of **software engineering principles**.
 - Use of **modern frameworks (React, Vite)**.
-- Integration of **cloud services (Firebase)** for authentication, database, and storage.
+- Integration of **cloud services (Supabase)** for authentication, database, and storage.
 - Addressing a **real-world scenario** (law office operations).
 
 The system not only reflects theoretical understanding but also practical application, making it a strong project for both learning and real-world applicability.
@@ -198,45 +203,39 @@ This section provides a brief explanation of the key functions implemented in th
 
 ### 🔑 Authentication & User Management
 
-- **registerUser(email, password, role):** Registers a new user with the specified email, password, and role (Admin, Lawyer, Assistant) using Firebase Authentication.
-- **loginUser(email, password):** Authenticates a user and starts a session.
-- **logoutUser():** Signs out the current user and clears session data.
-- **resetPassword(email):** Sends a password reset email to the user.
-- **getCurrentUser():** Retrieves the currently authenticated user's information.
-- **assignUserRole(userId, role):** Assigns or updates a user's role in the system.
+- **signUp(email, password):** Registers a new user using Supabase Auth.
+- **signIn(email, password):** Authenticates a user and starts a session.
+- **signOut():** Signs out the current user and clears local state.
+- **getCurrentUser():** Retrieves the currently authenticated Supabase user.
 
 ### 👨‍💼 Client Management
 
-- **addClient(clientData):** Adds a new client record to Firestore with the provided details.
-- **updateClient(clientId, updatedData):** Updates an existing client's information.
-- **deleteClient(clientId):** Removes a client record from the database.
-- **getClients(filter):** Fetches a list of clients, optionally filtered by name, case type, or contact info.
-- **linkClientToCase(clientId, caseId):** Associates a client with a specific legal case.
+- **create('clients', data):** Inserts a new client in Postgres.
+- **update('clients', id, data):** Updates an existing client.
+- **delete('clients', id):** Deletes a client.
+- **getAll('clients'):** Returns all clients for the logged-in user.
 
 ### ⚖️ Case Management
 
-- **addCase(caseData):** Registers a new legal case with all relevant details.
-- **updateCase(caseId, updatedData):** Updates information for an existing case.
-- **deleteCase(caseId):** Removes a case from the system.
-- **getCases(filter):** Retrieves cases, with optional filters for status, client, or lawyer.
-- **addDocumentToCase(caseId, documentData):** Uploads and links a document to a specific case.
-- **getCaseTimeline(caseId):** Returns a chronological list of updates and events for a case.
+- **create('cases', data):** Registers a new legal case with relevant details.
+- **update('cases', id, data):** Updates information for an existing case.
+- **delete('cases', id):** Removes a case.
+- **getAll('cases'):** Retrieves cases for the logged-in user.
 
 ### 📅 Appointment Scheduling
 
-- **addAppointment(appointmentData):** Creates a new appointment and stores it in Firestore.
-- **updateAppointment(appointmentId, updatedData):** Modifies an existing appointment.
-- **deleteAppointment(appointmentId):** Cancels and removes an appointment.
-- **getAppointments(filter):** Fetches appointments, optionally filtered by date, client, or case.
-- **sendAppointmentReminder(appointmentId):** Sends a notification or reminder for an upcoming appointment.
+- **create('calendar_events', data):** Creates a new appointment.
+- **update('calendar_events', id, data):** Updates an appointment.
+- **delete('calendar_events', id):** Deletes an appointment.
+- **getAll('calendar_events'):** Lists appointments for the logged-in user.
 
 ### 📂 Document Management
 
-- **uploadDocument(file, metadata):** Uploads a document to Firebase Storage and saves its metadata in Firestore.
-- **getDocuments(caseId):** Retrieves all documents linked to a specific case.
-- **downloadDocument(documentId):** Provides a download link for a stored document.
-- **updateDocument(documentId, updatedMetadata):** Updates document tags or version info.
-- **deleteDocument(documentId):** Removes a document from storage and the database.
+- **uploadFile(bucket, key, file):** Uploads a document to Supabase Storage.
+- **create('documents', data):** Saves document metadata (name, type, path).
+- **getAll('documents'):** Retrieves documents for the logged-in user.
+- **getFileUrl(bucket, key):** Gets a public URL (or use signed URLs for private buckets).
+- **deleteFile(bucket, key):** Removes a file from storage and deletes metadata.
 
 ### 📊 Dashboard & Reports
 
@@ -328,7 +327,7 @@ _Used to assign unique IDs to new records if not provided by the backend._
 ## 📊 System Architecture (Planned)
 
 ```
-[Frontend: React + Vite]  --->  [Backend Services: Firebase Auth, Firestore, Storage]
+[Frontend: React + Vite]  --->  [Backend Services: Supabase Auth, Postgres (RLS), Storage]
      |                                      |
      |                                      |
  [User Browser]  <----->  [Cloud Infrastructure]
@@ -364,7 +363,7 @@ This project is licensed for **educational and academic use only**. It is not in
 
 ## 🏆 Conclusion
 
-The **Law Office Management Web Application** is an innovative demonstration of how digital tools can streamline traditional legal practices. By combining **React’s powerful UI framework**, **Vite’s efficient development environment**, and **Firebase’s secure backend services**, the project successfully creates a **scalable, accessible, and secure law office system**.
+The **Law Office Management Web Application** is an innovative demonstration of how digital tools can streamline traditional legal practices. By combining **React’s powerful UI framework**, **Vite’s efficient development environment**, and **Supabase’s secure backend services (Auth, Postgres with RLS, Storage)**, the project successfully creates a **scalable, accessible, and secure law office system**.
 
 This project is not only a **technical achievement** but also an **academic milestone**, as it shows how students can apply their knowledge to address real-world challenges. With further development, the system can evolve into a production-ready enterprise solution.
 
