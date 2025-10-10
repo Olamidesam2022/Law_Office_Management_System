@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Users, Plus, Search, Mail, Phone } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Search,
+  Mail,
+  Phone,
+  Building,
+  MapPin,
+} from "lucide-react";
 import { supabaseService } from "../supabase/services.js";
-
-// =======================================================
-// CRUD Operations in ClientsPage.jsx
-// =======================================================
-// CREATE: handleAddClient() - adds a new client
-//   - Uses supabaseService.create("clients", newClient)
-// READ:   loadClients() - fetches all clients
-//   - Uses supabaseService.getAll("clients")
-//   - Called in useEffect on mount/user change
-// UPDATE: (Not implemented in this file)
-// DELETE: (Not implemented in this file)
-// =======================================================
 
 export function ClientsPage({ user, searchQuery = "" }) {
   const [clients, setClients] = useState([]);
@@ -32,18 +28,14 @@ export function ClientsPage({ user, searchQuery = "" }) {
       supabaseService.userId = user.uid;
       loadClients();
     }
-    // eslint-disable-next-line
   }, [user]);
 
-  // Sync top navbar search into local search input
+  // Sync top navbar search
   useEffect(() => {
-    try {
-      console.debug("ClientsPage sync searchQuery ->", searchQuery);
-    } catch (err) {}
     setSearchTerm(searchQuery || "");
   }, [searchQuery]);
 
-  // CRUD: READ - loadClients() fetches all clients
+  // READ
   const loadClients = async () => {
     try {
       setLoading(true);
@@ -56,7 +48,7 @@ export function ClientsPage({ user, searchQuery = "" }) {
     }
   };
 
-  // CRUD: CREATE - handleAddClient() adds a new client
+  // CREATE
   const handleAddClient = async () => {
     try {
       const client = await supabaseService.create("clients", {
@@ -89,21 +81,11 @@ export function ClientsPage({ user, searchQuery = "" }) {
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
           <h2 className="fw-semibold text-dark">Clients</h2>
         </div>
-        <div className="row">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="col-12 col-md-6 col-lg-4 mb-4">
-              <div className="custom-card">
-                <div className="custom-card-body">
-                  <div
-                    className="d-flex justify-content-center align-items-center"
-                    style={{ height: "80px" }}
-                  >
-                    <div className="loading-spinner"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: "200px" }}
+        >
+          <div className="loading-spinner"></div>
         </div>
       </div>
     );
@@ -111,13 +93,15 @@ export function ClientsPage({ user, searchQuery = "" }) {
 
   return (
     <div className="container-fluid px-2 px-md-4">
+      {/* Header */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
         <div>
           <h2 className="fw-semibold text-dark">Clients</h2>
           <p className="text-muted">Manage your client relationships</p>
         </div>
         <button
-          className="btn btn-primary-custom mt-2 mt-md-0 w-100 w-md-auto"
+          className="mt-2 mt-md-0"
+          style={btnStyle}
           onClick={() => setShowAddModal(true)}
         >
           <Plus size={16} className="me-2" />
@@ -126,194 +110,182 @@ export function ClientsPage({ user, searchQuery = "" }) {
       </div>
 
       {/* Search */}
-      <div className="filter-section mb-4">
-        <div className="row">
-          <div className="col-12 col-md-6">
-            <div className="position-relative">
-              <Search
-                className="position-absolute"
-                style={{
-                  left: "12px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  width: "16px",
-                  height: "16px",
-                  color: "#6b7280",
-                }}
-              />
-              <input
-                type="text"
-                placeholder="Search clients..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-control"
-                style={{ paddingLeft: "2.5rem" }}
-              />
-            </div>
-          </div>
-        </div>
+      <div className="mb-4">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search clients..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
-      {/* Clients List */}
-      {filteredClients.length === 0 ? (
-        <div className="custom-card">
-          <div className="custom-card-body">
-            <div className="empty-state">
-              <Users className="empty-state-icon" size={64} />
-              <h5 className="fw-medium text-dark mb-2">No clients found</h5>
-              <p className="text-muted mb-4">
-                {searchTerm
-                  ? "No clients match your search criteria."
-                  : "Get started by adding your first client."}
-              </p>
-              {!searchTerm && (
-                <button
-                  className="btn btn-primary-custom"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  <Plus size={16} className="me-2" />
-                  Add Your First Client
-                </button>
-              )}
-            </div>
+      {/* Clients list - Table layout */}
+      <div className="mb-4">
+        {filteredClients.length > 0 ? (
+          <div className="table-responsive">
+            <table className="table align-middle table-hover table-striped">
+              <thead className="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Company</th>
+                  <th>Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredClients.map((client) => (
+                  <tr key={client.id}>
+                    <td className="fw-semibold">
+                      <Users size={18} className="me-2 text-primary" />
+                      {client.name}
+                    </td>
+                    <td>
+                      {client.email ? (
+                        <span className="text-muted">
+                          <Mail size={14} className="me-1" />
+                          {client.email}
+                        </span>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
+                    <td>
+                      {client.phone ? (
+                        <span className="text-muted">
+                          <Phone size={14} className="me-1" />
+                          {client.phone}
+                        </span>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
+                    <td>
+                      {client.company ? (
+                        <span className="text-muted">
+                          <Building size={14} className="me-1" />
+                          {client.company}
+                        </span>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
+                    <td>
+                      {client.address ? (
+                        <span className="text-muted">
+                          <MapPin size={14} className="me-1" />
+                          {client.address}
+                        </span>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      ) : (
-        <div className="row">
-          {filteredClients.map((client) => (
-            <div key={client.id} className="col-12 col-md-6 col-lg-4 mb-4">
-              <div className="custom-card" style={{ minWidth: "260px" }}>
-                <div className="custom-card-header">
-                  <h5 className="mb-0">{client.name}</h5>
-                  {client.company && (
-                    <small className="text-muted">{client.company}</small>
-                  )}
-                </div>
-                <div className="custom-card-body">
-                  <div className="mb-2">
-                    {client.email && (
-                      <div
-                        className="d-flex align-items-center text-muted mb-2"
-                        style={{ fontSize: "14px" }}
-                      >
-                        <Mail size={16} className="me-2" />
-                        {client.email}
-                      </div>
-                    )}
-                    {client.phone && (
-                      <div
-                        className="d-flex align-items-center text-muted mb-2"
-                        style={{ fontSize: "14px" }}
-                      >
-                        <Phone size={16} className="me-2" />
-                        {client.phone}
-                      </div>
-                    )}
-                    {client.address && (
-                      <p
-                        className="text-muted mt-2 mb-0"
-                        style={{ fontSize: "14px" }}
-                      >
-                        {client.address}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        ) : (
+          <div className="col-12 text-center text-muted py-5">
+            No clients found
+          </div>
+        )}
+      </div>
 
       {/* Add Client Modal */}
       {showAddModal && (
         <div
-          className="modal show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          className="modal fade show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ background: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog modal-sm modal-dialog-centered">
+          <div
+            className="modal-dialog modal-sm modal-dialog-centered"
+            role="document"
+          >
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Add New Client</h5>
                 <button
                   type="button"
                   className="btn-close"
+                  aria-label="Close"
                   onClick={() => setShowAddModal(false)}
-                ></button>
+                />
               </div>
               <div className="modal-body">
-                <div className="form-group">
-                  <label className="form-label">Name *</label>
-                  <input
-                    type="text"
-                    value={newClient.name}
-                    onChange={(e) =>
-                      setNewClient({ ...newClient, name: e.target.value })
-                    }
-                    placeholder="Enter client name"
-                    className="form-control"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <input
-                    type="email"
-                    value={newClient.email}
-                    onChange={(e) =>
-                      setNewClient({ ...newClient, email: e.target.value })
-                    }
-                    placeholder="Enter email address"
-                    className="form-control"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Phone</label>
-                  <input
-                    type="text"
-                    value={newClient.phone}
-                    onChange={(e) =>
-                      setNewClient({ ...newClient, phone: e.target.value })
-                    }
-                    placeholder="Enter phone number"
-                    className="form-control"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Company</label>
-                  <input
-                    type="text"
-                    value={newClient.company}
-                    onChange={(e) =>
-                      setNewClient({ ...newClient, company: e.target.value })
-                    }
-                    placeholder="Enter company name"
-                    className="form-control"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Address</label>
-                  <input
-                    type="text"
-                    value={newClient.address}
-                    onChange={(e) =>
-                      setNewClient({ ...newClient, address: e.target.value })
-                    }
-                    placeholder="Enter address"
-                    className="form-control"
-                  />
-                </div>
+                <form>
+                  <div className="mb-3">
+                    <label className="form-label">Name *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newClient.name}
+                      onChange={(e) =>
+                        setNewClient({ ...newClient, name: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      value={newClient.email}
+                      onChange={(e) =>
+                        setNewClient({ ...newClient, email: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Phone</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newClient.phone}
+                      onChange={(e) =>
+                        setNewClient({ ...newClient, phone: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Company</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newClient.company}
+                      onChange={(e) =>
+                        setNewClient({ ...newClient, company: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Address</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newClient.address}
+                      onChange={(e) =>
+                        setNewClient({ ...newClient, address: e.target.value })
+                      }
+                    />
+                  </div>
+                </form>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  style={btnStyle}
                   onClick={() => setShowAddModal(false)}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary-custom"
+                  style={btnStyle}
                   onClick={handleAddClient}
                   disabled={!newClient.name}
                 >
@@ -324,14 +296,23 @@ export function ClientsPage({ user, searchQuery = "" }) {
           </div>
         </div>
       )}
-      {/* Responsive styles */}
+
+      {/* Table Styling */}
       <style>
         {`
+          .table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+          }
+          .table th, .table td {
+            vertical-align: middle;
+          }
           @media (max-width: 576px) {
-            .custom-card {
-              padding: 0.5rem;
+            .table th, .table td {
+              font-size: 0.9rem;
             }
-            .btn-primary-custom {
+            .btn {
               width: 100%;
             }
           }
@@ -340,3 +321,16 @@ export function ClientsPage({ user, searchQuery = "" }) {
     </div>
   );
 }
+
+/* Shared button style */
+const btnStyle = {
+  background: "transparent",
+  border: "1px solid #ccc",
+  color: "#212529",
+  fontSize: "1rem",
+  fontFamily: "inherit",
+  padding: "10px 16px",
+  borderRadius: "8px",
+  letterSpacing: "0.01em",
+  cursor: "pointer",
+};

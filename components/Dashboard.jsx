@@ -23,7 +23,7 @@ export function Dashboard({ user, onPageChange }) {
     totalClients: 0,
     activeCases: 0,
     totalDocuments: 0,
-    dailyRevenue: 0, // changed from monthlyRevenue
+    monthlyRevenue: 0,
   });
   const [appointments, setAppointments] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
@@ -38,7 +38,7 @@ export function Dashboard({ user, onPageChange }) {
     }
   }, [user]);
 
-  // CRUD: READ - loadDashboardData() fetches stats
+  // --- Load overall stats ---
   const loadDashboardData = async () => {
     try {
       setLoading(true);
@@ -51,13 +51,15 @@ export function Dashboard({ user, onPageChange }) {
 
       const activeCases = cases.filter((c) => c.status !== "closed").length;
 
-      // Calculate today's revenue
-      const todayStr = new Date().toISOString().split("T")[0];
-      const dailyRevenue = invoices
+      const now = new Date();
+      const thisMonth = now.getMonth();
+      const thisYear = now.getFullYear();
+      const monthlyRevenue = invoices
         .filter((invoice) => {
-          if (!invoice.date) return false;
-          const dateStr = new Date(invoice.date).toISOString().split("T")[0];
-          return dateStr === todayStr;
+          const invoiceDate = invoice.date || invoice.due_date;
+          if (!invoiceDate) return false;
+          const d = new Date(invoiceDate);
+          return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
         })
         .reduce((sum, inv) => sum + (inv.amount || 0), 0);
 
@@ -65,7 +67,7 @@ export function Dashboard({ user, onPageChange }) {
         totalClients: clients.length,
         activeCases,
         totalDocuments: documents.length,
-        dailyRevenue,
+        monthlyRevenue,
       });
     } catch (err) {
       console.error("Error loading stats:", err);
@@ -74,18 +76,18 @@ export function Dashboard({ user, onPageChange }) {
     }
   };
 
-  // CRUD: READ - loadAppointments() fetches appointments
+  // --- Load upcoming appointments from Supabase ---
   const loadAppointments = async () => {
     try {
-      const appts = await firebaseService.getAll("appointments");
+      const appts = await supabaseService.getAll("calendar_events");
       const today = new Date().toISOString().split("T")[0];
 
       const scheduled = appts
-        .filter(
-          (a) =>
-            a.userId === user.uid && a.status === "scheduled" && a.date >= today
-        )
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+        .filter((a) => a.status === "scheduled")
+        .sort(
+          (a, b) =>
+            new Date(a.starts_at || a.date) - new Date(b.starts_at || b.date)
+        );
 
       setAppointments(scheduled.slice(0, 5));
     } catch (err) {
@@ -93,35 +95,40 @@ export function Dashboard({ user, onPageChange }) {
     }
   };
 
-  // CRUD: UPDATE - markComplete() updates appointment status
+  // --- Mark appointment as complete ---
   const markComplete = async (id) => {
     try {
-      await firebaseService.update("appointments", id, { status: "completed" });
+      await supabaseService.update("calendar_events", id, {
+        status: "completed",
+      });
       setAppointments((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       console.error("Error updating appointment:", err);
     }
   };
 
-  // CRUD: READ - loadRevenueData() fetches invoices for chart
+  // --- Load monthly revenue chart data ---
   const loadRevenueData = async () => {
     try {
       const invoices = await supabaseService.getAll("billing");
-      const dailyMap = {};
+      const monthlyMap = {};
 
       invoices.forEach((inv) => {
-        if (!inv.date || !inv.amount) return;
-        const d = new Date(inv.date);
-        const key = d.toISOString().split("T")[0]; // YYYY-MM-DD
-        dailyMap[key] = (dailyMap[key] || 0) + inv.amount;
+        const invoiceDate = inv.date || inv.due_date;
+        if (!invoiceDate || !inv.amount) return;
+        const d = new Date(invoiceDate);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}`;
+        monthlyMap[key] = (monthlyMap[key] || 0) + inv.amount;
       });
 
-      // Sort by date ascending
-      const sortedKeys = Object.keys(dailyMap).sort();
+      const sortedKeys = Object.keys(monthlyMap).sort();
       setRevenueData(
-        sortedKeys.map((date) => ({
-          day: date,
-          revenue: dailyMap[date],
+        sortedKeys.map((month) => ({
+          month,
+          revenue: monthlyMap[month],
         }))
       );
     } catch (err) {
@@ -149,8 +156,8 @@ export function Dashboard({ user, onPageChange }) {
       iconClass: "purple",
     },
     {
-      title: "Daily Revenue", // changed label
-      value: `$${stats.dailyRevenue}`,
+      title: "Monthly Revenue",
+      value: `$${stats.monthlyRevenue.toLocaleString()}`,
       icon: DollarSign,
       iconClass: "emerald",
     },
@@ -163,6 +170,7 @@ export function Dashboard({ user, onPageChange }) {
         <p className="text-muted">Overview of your law practice</p>
       </div>
 
+      {/* --- Stats Cards --- */}
       <div className="row mb-4">
         {(loading ? [1, 2, 3, 4] : statCards).map((stat, i) => {
           const Icon = !loading ? stat.icon : null;
@@ -189,7 +197,7 @@ export function Dashboard({ user, onPageChange }) {
                         className="fw-semibold text-dark mt-1"
                         style={{ fontSize: "24px" }}
                       >
-                        {stat.value.toLocaleString()}
+                        {stat.value}
                       </div>
                     </div>
                     <div className={`stat-icon ${stat.iconClass}`}>
@@ -203,18 +211,19 @@ export function Dashboard({ user, onPageChange }) {
         })}
       </div>
 
+      {/* --- Charts and Upcoming Appointments --- */}
       <div className="row">
         <div className="col-12 col-lg-6 mb-4">
           <div className="custom-card" style={{ minWidth: "260px" }}>
             <div className="custom-card-header">
-              <h5 className="mb-0">Daily Revenue</h5>
+              <h5 className="mb-0">Monthly Revenue</h5>
             </div>
             <div className="custom-card-body" style={{ height: "320px" }}>
               {revenueData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={revenueData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
+                    <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip />
                     <Bar
@@ -258,8 +267,16 @@ export function Dashboard({ user, onPageChange }) {
                       <div>
                         <div className="fw-semibold">{appt.title}</div>
                         <small className="text-muted">
-                          {new Date(appt.date).toLocaleDateString()} at{" "}
-                          {appt.time}
+                          {new Date(
+                            appt.starts_at || appt.date
+                          ).toLocaleDateString()}{" "}
+                          at{" "}
+                          {new Date(
+                            appt.starts_at || appt.date
+                          ).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </small>
                       </div>
                       <button
@@ -285,16 +302,6 @@ export function Dashboard({ user, onPageChange }) {
           </div>
         </div>
       </div>
-
-      <style>
-        {`
-          @media (max-width: 576px) {
-            .stat-card, .custom-card {
-              padding: 0.5rem;
-            }
-          }
-        `}
-      </style>
     </div>
   );
 }

@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { FileText, Upload, Download } from "lucide-react";
+import { FileText, Upload, Download, Trash } from "lucide-react";
 import { supabaseService } from "../supabase/services.js";
 
 // =======================================================
 // CRUD Operations in DocumentsPage.jsx
 // =======================================================
 // READ:   loadDocuments() - fetches all documents
-//   - Uses supabaseService.getAll("documents")
-//   - Called in useEffect on mount/user change
-// CREATE: (Upload Modal UI present, but actual upload logic not implemented)
-// UPDATE: (Not implemented in this file)
-// DELETE: (Not implemented in this file)
+// CREATE: handleUpload()
+// UPDATE: (Not implemented)
+// DELETE: handleDelete()
 // =======================================================
 
 export function DocumentsPage({ user, searchQuery = "" }) {
@@ -29,12 +27,11 @@ export function DocumentsPage({ user, searchQuery = "" }) {
     }
   }, [user]);
 
-  // Keep top navbar search synced
   useEffect(() => {
     setSearchTerm(searchQuery || "");
   }, [searchQuery]);
 
-  // CRUD: READ - loadDocuments() fetches all documents
+  // READ
   const loadDocuments = async () => {
     try {
       setLoading(true);
@@ -47,6 +44,7 @@ export function DocumentsPage({ user, searchQuery = "" }) {
     }
   };
 
+  // CREATE
   const handleUpload = async () => {
     try {
       if (!docName || !docFile) return;
@@ -68,6 +66,7 @@ export function DocumentsPage({ user, searchQuery = "" }) {
     }
   };
 
+  // DOWNLOAD
   const handleDownload = async (doc) => {
     try {
       if (!doc?.path) return;
@@ -76,11 +75,27 @@ export function DocumentsPage({ user, searchQuery = "" }) {
         ? doc.path.slice(prefix.length)
         : doc.path;
       const url = await supabaseService.getFileUrl("documents", fileKey);
-      if (url) {
-        window.open(url, "_blank");
-      }
+      if (url) window.open(url, "_blank");
     } catch (error) {
       console.error("Error downloading document:", error);
+    }
+  };
+
+  // DELETE
+  const handleDelete = async (doc) => {
+    if (!window.confirm("Are you sure you want to delete this document?"))
+      return;
+    try {
+      const prefix = `${supabaseService.userId}/`;
+      const fileKey = doc.path.startsWith(prefix)
+        ? doc.path.slice(prefix.length)
+        : doc.path;
+      await supabaseService.deleteFile("documents", fileKey);
+      await supabaseService.delete("documents", doc.id);
+      setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      alert("Failed to delete document.");
     }
   };
 
@@ -135,32 +150,57 @@ export function DocumentsPage({ user, searchQuery = "" }) {
         />
       </div>
 
-      {/* Documents list */}
-      <div className="row">
+      {/* Documents list - modern table view */}
+      <div className="mb-4">
         {filteredDocuments.length > 0 ? (
-          filteredDocuments.map((doc) => (
-            <div key={doc.id} className="col-12 col-md-6 col-lg-4 mb-4">
-              <div className="custom-card" style={{ minWidth: "260px" }}>
-                <div className="custom-card-header">
-                  <h5 className="mb-0 d-flex align-items-center">
-                    <FileText size={20} className="me-2" />
-                    {doc.name}
-                  </h5>
-                </div>
-                <div className="custom-card-body">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <small className="text-muted">{doc.type}</small>
-                    <button
-                      className="btn btn-outline-primary btn-sm"
-                      onClick={() => handleDownload(doc)}
-                    >
-                      <Download size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
+          <div className="table-responsive">
+            <table className="table align-middle table-hover table-striped">
+              <thead className="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredDocuments.map((doc) => (
+                  <tr key={doc.id}>
+                    <td className="fw-semibold">
+                      <FileText size={18} className="me-2 text-primary" />
+                      {doc.name}
+                    </td>
+                    <td>{doc.type || <span className="text-muted">—</span>}</td>
+                    <td className="text-end">
+                      <div className="d-flex justify-content-end gap-2 flex-wrap">
+                        <button
+                          className="btn btn-outline-primary btn-sm d-flex align-items-center"
+                          onClick={() => handleDownload(doc)}
+                        >
+                          <Download
+                            size={16}
+                            className="me-1 d-none d-sm-inline"
+                          />
+                          <span className="d-none d-sm-inline">Download</span>
+                          <Download size={16} className="d-inline d-sm-none" />
+                        </button>
+                        <button
+                          className="btn btn-outline-danger btn-sm d-flex align-items-center"
+                          onClick={() => handleDelete(doc)}
+                        >
+                          <Trash
+                            size={16}
+                            className="me-1 d-none d-sm-inline"
+                          />
+                          <span className="d-none d-sm-inline">Delete</span>
+                          <Trash size={16} className="d-inline d-sm-none" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <div className="col-12 text-center text-muted py-5">
             No documents found
@@ -242,12 +282,21 @@ export function DocumentsPage({ user, searchQuery = "" }) {
         </div>
       )}
 
-      {/* Responsive tweaks */}
+      {/* Styles */}
       <style>
         {`
+          .table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+          }
+          .btn-sm {
+            font-size: 0.85rem;
+          }
           @media (max-width: 576px) {
-            .custom-card { padding: 0.5rem; }
-            .btn-outline-primary { width: 100%; }
+            .table th, .table td {
+              font-size: 0.9rem;
+            }
           }
         `}
       </style>

@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Briefcase, Plus, Search, Calendar, User } from "lucide-react";
+import {
+  Briefcase,
+  Plus,
+  Search,
+  Calendar,
+  User,
+  FileText,
+  Flag,
+} from "lucide-react";
 import { supabaseService } from "../supabase/services.js";
-
-// =======================================================
-// CRUD Operations in CasesPage.jsx
-// =======================================================
-// CREATE: handleAddCase() - Line ~54
-//   - Used in Add Case Modal (bottom of file) to create a new case
-// READ:   loadData() - Line ~32
-//   - Uses firebaseService.getAll("cases") and firebaseService.getAll("clients")
-//   - Called in useEffect on mount/user change
-// UPDATE: (Not implemented in this file)
-// DELETE: (Not implemented in this file)
-// =======================================================
 
 export function CasesPage({ user, searchQuery = "" }) {
   const [cases, setCases] = useState([]);
@@ -36,15 +32,12 @@ export function CasesPage({ user, searchQuery = "" }) {
       supabaseService.userId = user.uid;
       loadData();
     }
-    // eslint-disable-next-line
   }, [user]);
 
-  // Sync top navbar search into local search input
   useEffect(() => {
     setSearchTerm(searchQuery || "");
   }, [searchQuery]);
 
-  // CRUD: READ - loadData() fetches all cases and clients
   const loadData = async () => {
     try {
       setLoading(true);
@@ -61,7 +54,6 @@ export function CasesPage({ user, searchQuery = "" }) {
     }
   };
 
-  // CRUD: CREATE - handleAddCase() adds a new case
   const handleAddCase = async () => {
     try {
       const caseData = await supabaseService.create("cases", {
@@ -127,19 +119,15 @@ export function CasesPage({ user, searchQuery = "" }) {
   if (loading) {
     return (
       <div className="container-fluid px-2 px-md-4">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-          <h2 className="fw-semibold text-dark">Cases</h2>
-        </div>
+        <h2 className="fw-semibold text-dark mb-4">Cases</h2>
         <div>
           {[1, 2, 3].map((i) => (
             <div key={i} className="custom-card mb-3">
-              <div className="custom-card-body">
+              <div className="custom-card-body text-center">
                 <div
-                  className="d-flex justify-content-center align-items-center"
-                  style={{ height: "96px" }}
-                >
-                  <div className="loading-spinner"></div>
-                </div>
+                  className="loading-spinner"
+                  style={{ height: "80px" }}
+                ></div>
               </div>
             </div>
           ))}
@@ -206,95 +194,90 @@ export function CasesPage({ user, searchQuery = "" }) {
         </div>
       </div>
 
-      {/* Cases List */}
+      {/* Case List Styled Like Contact Card */}
       {filteredCases.length === 0 ? (
-        <div className="custom-card">
-          <div className="custom-card-body">
-            <div className="empty-state text-center">
-              <Briefcase className="empty-state-icon" size={64} />
-              <h5 className="fw-medium text-dark mb-2">No cases found</h5>
-              <p className="text-muted mb-4">
-                {searchTerm || statusFilter !== "all"
-                  ? "No cases match your search criteria."
-                  : "Get started by adding your first case."}
-              </p>
-              {!searchTerm && statusFilter === "all" && (
-                <button
-                  className="btn btn-primary-custom"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  <Plus size={16} className="me-2" />
-                  Add Your First Case
-                </button>
-              )}
-            </div>
-          </div>
+        <div className="custom-card text-center p-4">
+          <Briefcase size={48} className="mb-3 text-muted" />
+          <h5 className="fw-medium text-dark">No cases found</h5>
+          <p className="text-muted">
+            {searchTerm || statusFilter !== "all"
+              ? "No cases match your search criteria."
+              : "Get started by adding your first case."}
+          </p>
+          {!searchTerm && statusFilter === "all" && (
+            <button
+              className="btn btn-primary-custom mt-2"
+              onClick={() => setShowAddModal(true)}
+            >
+              <Plus size={16} className="me-2" />
+              Add Your First Case
+            </button>
+          )}
         </div>
       ) : (
-        <div className="overflow-auto">
-          {filteredCases.map((caseItem) => {
-            const client = clients.find((c) => c.id === (caseItem.client_id || caseItem.clientId));
-            return (
-              <div
-                key={caseItem.id}
-                className="custom-card mb-3"
-                style={{ minWidth: "280px" }}
-              >
-                <div className="custom-card-header">
-                  <div className="row align-items-start">
-                    <div className="col-12 col-lg-8 mb-2 mb-lg-0">
-                      <h5 className="mb-2">{caseItem.title}</h5>
-                      <div
-                        className="d-flex flex-wrap gap-3 text-muted"
-                        style={{ fontSize: "14px" }}
+        <div className="table-responsive">
+          <table className="table align-middle custom-table">
+            <thead className="table-light">
+              <tr>
+                <th>Title</th>
+                <th>Client</th>
+                <th>Type</th>
+                <th>Deadline</th>
+                <th>Priority</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCases.map((caseItem) => {
+                const client = clients.find(
+                  (c) => c.id === (caseItem.client_id || caseItem.clientId)
+                );
+                return (
+                  <tr key={caseItem.id} className="custom-row">
+                    <td>
+                      <div className="d-flex align-items-center gap-2">
+                        <FileText size={16} />
+                        <strong>{caseItem.title}</strong>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="d-flex align-items-center gap-2">
+                        <User size={16} />
+                        {client ? client.name : "—"}
+                      </div>
+                    </td>
+                    <td className="text-capitalize">{caseItem.type || "—"}</td>
+                    <td>
+                      <div className="d-flex align-items-center gap-2">
+                        <Calendar size={16} />
+                        {caseItem.due_date
+                          ? new Date(caseItem.due_date).toLocaleDateString()
+                          : "—"}
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${getPriorityBadgeClass(
+                          caseItem.priority
+                        )}`}
                       >
-                        {client && (
-                          <div className="d-flex align-items-center">
-                            <User size={16} className="me-1" />
-                            {client.name}
-                          </div>
-                        )}
-                        {caseItem.type && (
-                          <span className="text-capitalize">
-                            {caseItem.type}
-                          </span>
-                        )}
-                        {(caseItem.due_date || caseItem.deadline) && (
-                          <div className="d-flex align-items-center">
-                            <Calendar size={16} className="me-1" />
-                            {new Date(caseItem.due_date || caseItem.deadline).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="col-12 col-lg-4 mt-2 mt-lg-0">
-                      <div className="d-flex gap-2 justify-content-lg-end">
-                        <span
-                          className={`badge ${getPriorityBadgeClass(
-                            caseItem.priority
-                          )}`}
-                        >
-                          {caseItem.priority}
-                        </span>
-                        <span
-                          className={`badge ${getStatusBadgeClass(
-                            caseItem.status
-                          )}`}
-                        >
-                          {caseItem.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {caseItem.description && (
-                  <div className="custom-card-body">
-                    <p className="text-muted mb-0">{caseItem.description}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                        {caseItem.priority}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${getStatusBadgeClass(
+                          caseItem.status
+                        )}`}
+                      >
+                        {caseItem.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -416,20 +399,27 @@ export function CasesPage({ user, searchQuery = "" }) {
         </div>
       )}
 
-      {/* Responsive styles */}
       <style>
         {`
-          @media (max-width: 576px) {
-            .custom-card-header .row > [class^="col-"] {
-              margin-bottom: 8px;
-            }
-            .custom-card {
-              padding: 0.5rem;
-            }
-            .btn-primary-custom {
-              width: 100%;
-            }
+          .custom-table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
           }
+          .custom-row:hover {
+            background-color: #f9fafb;
+            transition: 0.2s;
+          }
+          .badge {
+            padding: 0.4rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+          }
+          .badge-success { background-color: #d1fae5; color: #065f46; }
+          .badge-warning { background-color: #fef3c7; color: #92400e; }
+          .badge-danger { background-color: #fee2e2; color: #991b1b; }
+          .badge-info { background-color: #e0f2fe; color: #075985; }
+          .badge-secondary { background-color: #e5e7eb; color: #374151; }
         `}
       </style>
     </div>

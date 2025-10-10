@@ -8,12 +8,11 @@ export function CalendarPage({ user }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-  // Form state
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [clientName, setClientName] = useState("");
-  const [status, setStatus] = useState("scheduled"); // default always scheduled
+  const [status, setStatus] = useState("scheduled");
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -24,7 +23,6 @@ export function CalendarPage({ user }) {
     // eslint-disable-next-line
   }, [user]);
 
-  // CRUD: READ - loadAppointments() fetches all appointments
   const loadAppointments = async () => {
     try {
       setLoading(true);
@@ -47,7 +45,6 @@ export function CalendarPage({ user }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  // CRUD: CREATE & UPDATE - handleSaveAppointment() creates or updates an appointment
   const handleSaveAppointment = async () => {
     if (!validateForm()) return;
 
@@ -55,27 +52,35 @@ export function CalendarPage({ user }) {
       const newAppointment = {
         title,
         description: clientName || null,
-        starts_at: date && time ? new Date(`${date}T${time}:00Z`).toISOString() : null,
+        starts_at:
+          date && time ? new Date(`${date}T${time}:00Z`).toISOString() : null,
         ends_at: null,
         completed: selectedAppointment ? status === "completed" : false,
+        status,
       };
 
       if (selectedAppointment) {
-        await supabaseService.update("calendar_events", selectedAppointment.id, newAppointment);
+        await supabaseService.update(
+          "calendar_events",
+          selectedAppointment.id,
+          newAppointment
+        );
         setAppointments((prev) =>
           prev.map((a) =>
             a.id === selectedAppointment.id ? { ...a, ...newAppointment } : a
           )
         );
       } else {
-        const created = await supabaseService.create("calendar_events", newAppointment);
+        const created = await supabaseService.create(
+          "calendar_events",
+          newAppointment
+        );
         setAppointments((prev) => [
           { id: created.id, ...newAppointment },
           ...prev,
         ]);
       }
 
-      // Reset
       setTitle("");
       setDate("");
       setTime("");
@@ -89,7 +94,6 @@ export function CalendarPage({ user }) {
     }
   };
 
-  // CRUD: DELETE - handleDeleteAppointment() deletes an appointment
   const handleDeleteAppointment = async (id) => {
     try {
       await supabaseService.delete("calendar_events", id);
@@ -100,9 +104,10 @@ export function CalendarPage({ user }) {
     }
   };
 
-  // Group appointments by date
   const groupedAppointments = appointments.reduce((groups, appointment) => {
-    const d = new Date(appointment.starts_at || appointment.date).toDateString();
+    const d = new Date(
+      appointment.starts_at || appointment.date
+    ).toDateString();
     if (!groups[d]) groups[d] = [];
     groups[d].push(appointment);
     return groups;
@@ -110,20 +115,20 @@ export function CalendarPage({ user }) {
 
   if (loading) {
     return (
-      <div className="container-fluid px-2">
+      <div className="container-fluid px-2 calendar-bg">
         <h2 className="fw-semibold text-dark">Calendar</h2>
         <div
           className="d-flex justify-content-center align-items-center"
           style={{ height: "200px" }}
         >
-          <div className="loading-spinner"></div>
+          <div className="spinner-border text-primary"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid px-2">
+    <div className="container-fluid px-2 calendar-bg">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -131,7 +136,7 @@ export function CalendarPage({ user }) {
           <p className="text-muted">Manage appointments and schedule</p>
         </div>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary rounded-pill px-3"
           onClick={() => {
             setSelectedAppointment(null);
             setShowModal(true);
@@ -147,55 +152,74 @@ export function CalendarPage({ user }) {
         <div className="alert alert-info">No appointments scheduled.</div>
       ) : (
         Object.entries(groupedAppointments).map(([date, dayAppointments]) => (
-          <div key={date} className="custom-card mb-4">
-            <div className="custom-card-header">
-              <h5 className="mb-0 d-flex align-items-center">
-                <Calendar size={20} className="me-2" />
+          <div key={date} className="card shadow-sm border-0 mb-4 rounded-4">
+            <div className="card-header bg-light border-0 py-3">
+              <h5 className="mb-0 d-flex align-items-center text-primary fw-semibold">
+                <Calendar size={20} className="me-2 text-primary" />
                 {date}
               </h5>
             </div>
-            <div className="custom-card-body">
+            <div className="card-body">
               {dayAppointments.map((appointment) => (
                 <div
                   key={appointment.id}
-                  className="d-flex align-items-center justify-content-between p-3 border rounded mb-2"
+                  className="d-flex align-items-center justify-content-between border rounded-3 p-3 mb-3 bg-white shadow-sm hover-card"
+                  style={{ transition: "all 0.2s ease" }}
                 >
                   <div>
-                    <h6 className="mb-1">{appointment.title}</h6>
-                    <div
-                      className="d-flex align-items-center text-muted"
-                      style={{ fontSize: "14px" }}
-                    >
-                      <Clock size={16} className="me-1" />
-                      {appointment.time}
-                      {appointment.clientName && (
+                    <h6 className="fw-semibold mb-1 text-dark">
+                      {appointment.title}
+                    </h6>
+                    <div className="d-flex align-items-center text-muted small">
+                      <Clock size={15} className="me-1 text-secondary" />
+                      {appointment.starts_at
+                        ? new Date(appointment.starts_at).toLocaleTimeString(
+                            [],
+                            { hour: "2-digit", minute: "2-digit" }
+                          )
+                        : "—"}
+                      {appointment.description && (
                         <>
                           <span className="mx-2">•</span>
-                          <User size={16} className="me-1" />
-                          {appointment.clientName}
+                          <User size={15} className="me-1 text-secondary" />
+                          {appointment.description}
                         </>
                       )}
                     </div>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
                     <span
-                      className={`badge mt-1 ${
-                        appointment.status === "scheduled"
-                          ? "bg-primary"
-                          : "bg-secondary"
+                      className={`badge rounded-pill px-3 py-2 ${
+                        appointment.status === "completed"
+                          ? "bg-success"
+                          : appointment.status === "taken"
+                          ? "bg-warning text-dark"
+                          : "bg-primary"
                       }`}
                     >
-                      {appointment.status}
+                      {appointment.status || "scheduled"}
                     </span>
-                  </div>
-                  <div className="d-flex gap-2">
                     <button
-                      className="btn btn-outline-primary btn-sm"
+                      className="btn btn-outline-primary btn-sm rounded-pill px-3"
                       onClick={() => {
                         setSelectedAppointment(appointment);
                         setTitle(appointment.title);
-                        setDate(appointment.date);
-                        setTime(appointment.time);
-                        setClientName(appointment.clientName);
-                        setStatus(appointment.status);
+                        setDate(
+                          appointment.starts_at
+                            ? new Date(appointment.starts_at)
+                                .toISOString()
+                                .slice(0, 10)
+                            : ""
+                        );
+                        setTime(
+                          appointment.starts_at
+                            ? new Date(appointment.starts_at)
+                                .toISOString()
+                                .slice(11, 16)
+                            : ""
+                        );
+                        setClientName(appointment.description || "");
+                        setStatus(appointment.status || "scheduled");
                         setShowModal(true);
                       }}
                     >
@@ -203,7 +227,7 @@ export function CalendarPage({ user }) {
                       Edit
                     </button>
                     <button
-                      className="btn btn-outline-danger btn-sm"
+                      className="btn btn-outline-danger btn-sm rounded-pill px-3"
                       onClick={() => handleDeleteAppointment(appointment.id)}
                     >
                       <Trash size={14} className="me-1" />
@@ -218,108 +242,110 @@ export function CalendarPage({ user }) {
       )}
 
       {/* Modal */}
-      <div
-        className={`modal fade${showModal ? " show d-block" : ""}`}
-        style={showModal ? { background: "rgba(0,0,0,0.5)" } : {}}
-      >
-        <div className="modal-dialog modal-sm modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header border-bottom">
-              <h5 className="modal-title">
-                {selectedAppointment
-                  ? "Edit Appointment"
-                  : "Schedule Appointment"}
-              </h5>
-              <button
-                className="btn-close"
-                onClick={() => setShowModal(false)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              <form>
-                <div className="mb-3">
-                  <label className="form-label">Title</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                  {errors.title && (
-                    <small className="text-danger">{errors.title}</small>
-                  )}
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Date</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                  {errors.date && (
-                    <small className="text-danger">{errors.date}</small>
-                  )}
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Time</label>
-                  <input
-                    type="time"
-                    className="form-control"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                  />
-                  {errors.time && (
-                    <small className="text-danger">{errors.time}</small>
-                  )}
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Client Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                  />
-                  {errors.clientName && (
-                    <small className="text-danger">{errors.clientName}</small>
-                  )}
-                </div>
-                {selectedAppointment && (
+      {showModal && (
+        <div
+          className="modal fade show d-block"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg rounded-4">
+              <div className="modal-header border-bottom-0">
+                <h5 className="modal-title fw-semibold text-primary">
+                  {selectedAppointment
+                    ? "Edit Appointment"
+                    : "Schedule Appointment"}
+                </h5>
+                <button
+                  className="btn-close"
+                  onClick={() => setShowModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <form>
                   <div className="mb-3">
-                    <label className="form-label">Status</label>
-                    <select
-                      className="form-select"
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
-                    >
-                      <option value="scheduled">Scheduled</option>
-                      <option value="completed">Completed</option>
-                      <option value="taken">Taken</option>
-                    </select>
+                    <label className="form-label fw-semibold">Title</label>
+                    <input
+                      type="text"
+                      className="form-control rounded-3"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                    {errors.title && (
+                      <small className="text-danger">{errors.title}</small>
+                    )}
                   </div>
-                )}
-              </form>
-            </div>
-            <div className="modal-footer border-top">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleSaveAppointment}
-              >
-                {selectedAppointment
-                  ? "Update Appointment"
-                  : "Save Appointment"}
-              </button>
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">Date</label>
+                    <input
+                      type="date"
+                      className="form-control rounded-3"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                    {errors.date && (
+                      <small className="text-danger">{errors.date}</small>
+                    )}
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">Time</label>
+                    <input
+                      type="time"
+                      className="form-control rounded-3"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                    />
+                    {errors.time && (
+                      <small className="text-danger">{errors.time}</small>
+                    )}
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">
+                      Client Name
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control rounded-3"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                    />
+                    {errors.clientName && (
+                      <small className="text-danger">{errors.clientName}</small>
+                    )}
+                  </div>
+                  {selectedAppointment && (
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">Status</label>
+                      <select
+                        className="form-select rounded-3"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                      >
+                        <option value="scheduled">Scheduled</option>
+                        <option value="completed">Completed</option>
+                        <option value="taken">Taken</option>
+                      </select>
+                    </div>
+                  )}
+                </form>
+              </div>
+              <div className="modal-footer border-top-0">
+                <button
+                  className="btn btn-light rounded-pill px-3"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary rounded-pill px-3"
+                  onClick={handleSaveAppointment}
+                >
+                  {selectedAppointment ? "Update" : "Save"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
