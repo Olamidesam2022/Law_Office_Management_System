@@ -180,7 +180,7 @@ export function DocumentsPage({ user, searchQuery = "" }) {
                             size={16}
                             className="me-1 d-none d-sm-inline"
                           />
-                          <span className="d-none d-sm-inline">Download</span>
+                          <span className="d-none d-sm-inline">Open</span>
                           <Download size={16} className="d-inline d-sm-none" />
                         </button>
                         <button
