@@ -174,8 +174,8 @@ export const supabaseService = {
     if (!this.userId) throw new Error("userId not set on supabaseService");
 
     const { data, error } = await supabase.storage
-      .from(bucketName)
-      .download(`${this.userId}/${filePath}`);
+      .from("private-bucket")
+      .upload(`user-${user.id}/${file.name}`, file);
 
     if (error) throw error;
     return data;
@@ -200,6 +200,20 @@ export const supabaseService = {
 
     if (error) throw error;
     return true;
+  },
+
+  // =======================
+  // SIGNED URL GENERATION
+  // =======================
+  async getSignedFileUrl(bucketName, filePath, expiresInSeconds = 3600) {
+    if (!this.userId) throw new Error("userId not set on supabaseService");
+
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .createSignedUrl(`${this.userId}/${filePath}`, expiresInSeconds);
+
+    if (error) throw error;
+    return data.signedUrl;
   },
 
   // =======================
