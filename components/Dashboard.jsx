@@ -38,7 +38,6 @@ export function Dashboard({ user, onPageChange }) {
     }
   }, [user]);
 
-  // --- Load overall stats ---
   const loadDashboardData = async () => {
     try {
       setLoading(true);
