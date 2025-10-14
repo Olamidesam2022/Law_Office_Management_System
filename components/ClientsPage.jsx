@@ -94,14 +94,13 @@ export function ClientsPage({ user, searchQuery = "" }) {
   return (
     <div className="container-fluid px-2 px-md-4">
       {/* Header */}
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="fw-semibold text-dark">Clients</h2>
           <p className="text-muted">Manage your client relationships</p>
         </div>
         <button
-          className="mt-2 mt-md-0"
-          style={btnStyle}
+          className="btn btn-primary-custom mt-0"
           onClick={() => setShowAddModal(true)}
         >
           <Plus size={16} className="me-2" />
@@ -316,13 +315,18 @@ export function ClientsPage({ user, searchQuery = "" }) {
               width: 100%;
             }
           }
+          .btn-primary-custom {
+            background-color: #2563eb;
+            color: #fff;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: none;
+          }
         `}
       </style>
     </div>
   );
 }
 
-/* Shared button style */
 const btnStyle = {
   background: "transparent",
   border: "1px solid #ccc",

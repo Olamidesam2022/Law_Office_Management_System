@@ -124,14 +124,13 @@ export function DocumentsPage({ user, searchQuery = "" }) {
   return (
     <div className="container-fluid px-2 px-md-4">
       {/* Header */}
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="fw-semibold text-dark">Documents</h2>
           <p className="text-muted">Manage case documents and files</p>
         </div>
         <button
-          className="mt-2 mt-md-0"
-          style={btnStyle}
+          className="btn btn-primary-custom mt-0"
           onClick={() => setShowModal(true)}
         >
           <Upload size={16} className="me-2" />
@@ -297,6 +296,12 @@ export function DocumentsPage({ user, searchQuery = "" }) {
             .table th, .table td {
               font-size: 0.9rem;
             }
+          }
+          .btn-primary-custom {
+            background-color: #2563eb;
+            color: #fff;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: none;
           }
         `}
       </style>

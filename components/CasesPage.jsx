@@ -6,7 +6,6 @@ import {
   Calendar,
   User,
   FileText,
-  Flag,
 } from "lucide-react";
 import { supabaseService } from "../supabase/services.js";
 
@@ -139,13 +138,13 @@ export function CasesPage({ user, searchQuery = "" }) {
   return (
     <div className="container-fluid px-2 px-md-4">
       {/* Header */}
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="fw-semibold text-dark">Cases</h2>
           <p className="text-muted">Track and manage your legal cases</p>
         </div>
         <button
-          className="btn btn-primary-custom mt-2 mt-md-0 w-100 w-md-auto"
+          className="btn btn-primary-custom mt-0"
           onClick={() => setShowAddModal(true)}
         >
           <Plus size={16} className="me-2" />
@@ -194,7 +193,7 @@ export function CasesPage({ user, searchQuery = "" }) {
         </div>
       </div>
 
-      {/* Case List Styled Like Contact Card */}
+      {/* Case List */}
       {filteredCases.length === 0 ? (
         <div className="custom-card text-center p-4">
           <Briefcase size={48} className="mb-3 text-muted" />
@@ -288,18 +287,18 @@ export function CasesPage({ user, searchQuery = "" }) {
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
           <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Add New Case</h5>
+            <div className="modal-content small-modal">
+              <div className="modal-header py-2">
+                <h6 className="modal-title fw-semibold">Add New Case</h6>
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => setShowAddModal(false)}
                 ></button>
               </div>
-              <div className="modal-body">
-                <div className="form-group mb-3">
-                  <label className="form-label">Case Title *</label>
+              <div className="modal-body modal-body-scroll">
+                <div className="form-group mb-2">
+                  <label className="form-label small">Case Title *</label>
                   <input
                     type="text"
                     value={newCase.title}
@@ -307,17 +306,17 @@ export function CasesPage({ user, searchQuery = "" }) {
                       setNewCase({ ...newCase, title: e.target.value })
                     }
                     placeholder="Enter case title"
-                    className="form-control"
+                    className="form-control form-control-sm"
                   />
                 </div>
-                <div className="form-group mb-3">
-                  <label className="form-label">Client *</label>
+                <div className="form-group mb-2">
+                  <label className="form-label small">Client *</label>
                   <select
                     value={newCase.clientId}
                     onChange={(e) =>
                       setNewCase({ ...newCase, clientId: e.target.value })
                     }
-                    className="form-select"
+                    className="form-select form-select-sm"
                   >
                     <option value="">Select a client</option>
                     {clients.map((client) => (
@@ -327,8 +326,8 @@ export function CasesPage({ user, searchQuery = "" }) {
                     ))}
                   </select>
                 </div>
-                <div className="form-group mb-3">
-                  <label className="form-label">Case Type</label>
+                <div className="form-group mb-2">
+                  <label className="form-label small">Case Type</label>
                   <input
                     type="text"
                     value={newCase.type}
@@ -336,36 +335,36 @@ export function CasesPage({ user, searchQuery = "" }) {
                       setNewCase({ ...newCase, type: e.target.value })
                     }
                     placeholder="e.g., Civil, Criminal, Corporate"
-                    className="form-control"
+                    className="form-control form-control-sm"
                   />
                 </div>
-                <div className="form-group mb-3">
-                  <label className="form-label">Priority</label>
+                <div className="form-group mb-2">
+                  <label className="form-label small">Priority</label>
                   <select
                     value={newCase.priority}
                     onChange={(e) =>
                       setNewCase({ ...newCase, priority: e.target.value })
                     }
-                    className="form-select"
+                    className="form-select form-select-sm"
                   >
                     <option value="high">High</option>
                     <option value="medium">Medium</option>
                     <option value="low">Low</option>
                   </select>
                 </div>
-                <div className="form-group mb-3">
-                  <label className="form-label">Deadline</label>
+                <div className="form-group mb-2">
+                  <label className="form-label small">Deadline</label>
                   <input
                     type="date"
                     value={newCase.deadline}
                     onChange={(e) =>
                       setNewCase({ ...newCase, deadline: e.target.value })
                     }
-                    className="form-control"
+                    className="form-control form-control-sm"
                   />
                 </div>
-                <div className="form-group mb-3">
-                  <label className="form-label">Description</label>
+                <div className="form-group mb-2">
+                  <label className="form-label small">Description</label>
                   <input
                     type="text"
                     value={newCase.description}
@@ -373,21 +372,21 @@ export function CasesPage({ user, searchQuery = "" }) {
                       setNewCase({ ...newCase, description: e.target.value })
                     }
                     placeholder="Brief case description"
-                    className="form-control"
+                    className="form-control form-control-sm"
                   />
                 </div>
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer py-2">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-light btn-sm"
                   onClick={() => setShowAddModal(false)}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary-custom"
+                  className="btn btn-primary-custom btn-sm"
                   onClick={handleAddCase}
                   disabled={!newCase.title || !newCase.clientId}
                 >
@@ -420,6 +419,32 @@ export function CasesPage({ user, searchQuery = "" }) {
           .badge-danger { background-color: #fee2e2; color: #991b1b; }
           .badge-info { background-color: #e0f2fe; color: #075985; }
           .badge-secondary { background-color: #e5e7eb; color: #374151; }
+
+          .btn-primary-custom {
+            background-color: #2563eb;
+            color: #fff;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: none;
+          }
+
+          /* ✅ Smaller, screen-contained modal */
+          .small-modal {
+            border-radius: 12px;
+            max-height: 85vh;
+            overflow: hidden;
+          }
+          .modal-body-scroll {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 6px;
+          }
+          .modal-body-scroll::-webkit-scrollbar {
+            width: 6px;
+          }
+          .modal-body-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.15);
+            border-radius: 3px;
+          }
         `}
       </style>
     </div>

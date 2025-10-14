@@ -174,7 +174,7 @@ export function BillingPage({ user, searchQuery = "" }) {
           <p className="text-muted">Manage invoices and track payments</p>
         </div>
         <button
-          className="btn btn-primary d-flex align-items-center"
+          className="btn btn-primary-custom d-flex align-items-center mt-0"
           onClick={() => setShowModal(true)}
         >
           <Plus size={16} className="me-2" />
@@ -386,7 +386,7 @@ export function BillingPage({ user, searchQuery = "" }) {
               </div>
               <div className="modal-footer border-top">
                 <button
-                  className="btn btn-secondary"
+                  className="btn border"
                   onClick={() => {
                     setShowModal(false);
                     setIsEditMode(false);
@@ -396,7 +396,7 @@ export function BillingPage({ user, searchQuery = "" }) {
                 >
                   Cancel
                 </button>
-                <button className="btn btn-primary" onClick={handleSaveInvoice}>
+                <button className="btn border" onClick={handleSaveInvoice}>
                   {isEditMode ? "Update" : "Save"}
                 </button>
               </div>
@@ -404,6 +404,17 @@ export function BillingPage({ user, searchQuery = "" }) {
           </div>
         </div>
       )}
+
+      <style>
+        {`
+          .btn-primary-custom {
+            background-color: #2563eb;
+            color: #fff;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: none;
+          }
+        `}
+      </style>
 
       {/* View Modal */}
       {selectedInvoice && (

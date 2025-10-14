@@ -136,7 +136,7 @@ export function CalendarPage({ user }) {
           <p className="text-muted">Manage appointments and schedule</p>
         </div>
         <button
-          className="btn btn-primary rounded-pill px-3"
+          className="btn btn-primary-custom px-3 mt-0"
           onClick={() => {
             setSelectedAppointment(null);
             setShowModal(true);
@@ -250,7 +250,7 @@ export function CalendarPage({ user }) {
           <div className="modal-dialog modal-sm modal-dialog-centered">
             <div className="modal-content border-0 shadow-lg rounded-4">
               <div className="modal-header border-bottom-0">
-                <h5 className="modal-title fw-semibold text-primary">
+                <h5 className="modal-title fw-semibold text-dark">
                   {selectedAppointment
                     ? "Edit Appointment"
                     : "Schedule Appointment"}
@@ -330,13 +330,13 @@ export function CalendarPage({ user }) {
               </div>
               <div className="modal-footer border-top-0">
                 <button
-                  className="btn btn-light rounded-pill px-3"
+                  className="btn btn-light border px-3"
                   onClick={() => setShowModal(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="btn btn-primary rounded-pill px-3"
+                  className="btn border px-3"
                   onClick={handleSaveAppointment}
                 >
                   {selectedAppointment ? "Update" : "Save"}
@@ -346,6 +346,16 @@ export function CalendarPage({ user }) {
           </div>
         </div>
       )}
+      <style>
+        {`
+          .btn-primary-custom {
+            background-color: #2563eb;
+            color: #fff;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: none;
+          }
+        `}
+      </style>
     </div>
   );
 }
