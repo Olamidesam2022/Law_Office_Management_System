@@ -2,15 +2,6 @@ import React, { useState, useEffect } from "react";
 import { FileText, Upload, Download, Trash } from "lucide-react";
 import { supabaseService } from "../supabase/services.js";
 
-// =======================================================
-// CRUD Operations in DocumentsPage.jsx
-// =======================================================
-// READ:   loadDocuments() - fetches all documents
-// CREATE: handleUpload()
-// UPDATE: (Not implemented)
-// DELETE: handleDelete()
-// =======================================================
-
 export function DocumentsPage({ user, searchQuery = "" }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,13 +38,17 @@ export function DocumentsPage({ user, searchQuery = "" }) {
   // CREATE
   const handleUpload = async () => {
     try {
-      if (!docName || !docFile) return;
+      if (!docName || !docFile || !docType) {
+        alert("Please fill in all fields before uploading.");
+        return;
+      }
+
       const safeName = docFile.name || "file";
       const key = `${Date.now()}_${safeName}`;
       await supabaseService.uploadFile("documents", key, docFile);
       const created = await supabaseService.create("documents", {
         name: docName,
-        type: docType || null,
+        type: docType,
         path: `${supabaseService.userId}/${key}`,
       });
       setDocuments((prev) => [created, ...prev]);
@@ -63,6 +58,7 @@ export function DocumentsPage({ user, searchQuery = "" }) {
       setShowModal(false);
     } catch (error) {
       console.error("Error uploading document:", error);
+      alert("Upload failed. Please try again.");
     }
   };
 
@@ -149,7 +145,7 @@ export function DocumentsPage({ user, searchQuery = "" }) {
         />
       </div>
 
-      {/* Documents list - modern table view */}
+      {/* Documents list */}
       <div className="mb-4">
         {filteredDocuments.length > 0 ? (
           <div className="table-responsive">
@@ -180,7 +176,6 @@ export function DocumentsPage({ user, searchQuery = "" }) {
                             className="me-1 d-none d-sm-inline"
                           />
                           <span className="d-none d-sm-inline">Open</span>
-                          <Download size={16} className="d-inline d-sm-none" />
                         </button>
                         <button
                           className="btn btn-outline-danger btn-sm d-flex align-items-center"
@@ -191,7 +186,6 @@ export function DocumentsPage({ user, searchQuery = "" }) {
                             className="me-1 d-none d-sm-inline"
                           />
                           <span className="d-none d-sm-inline">Delete</span>
-                          <Trash size={16} className="d-inline d-sm-none" />
                         </button>
                       </div>
                     </td>
@@ -240,15 +234,26 @@ export function DocumentsPage({ user, searchQuery = "" }) {
                       onChange={(e) => setDocName(e.target.value)}
                     />
                   </div>
+
+                  {/* Dropdown for Type */}
                   <div className="mb-3">
-                    <label className="form-label">Type</label>
-                    <input
-                      type="text"
-                      className="form-control"
+                    <label className="form-label">Document Type</label>
+                    <select
+                      className="form-select"
                       value={docType}
                       onChange={(e) => setDocType(e.target.value)}
-                    />
+                    >
+                      <option value="">Select document type</option>
+                      <option value="Petition">Petition</option>
+                      <option value="Motion">Motion</option>
+                      <option value="Affidavit">Affidavit</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Evidence">Evidence</option>
+                      <option value="Report">Report</option>
+                      <option value="Others">Others</option>
+                    </select>
                   </div>
+
                   <div className="mb-3">
                     <label className="form-label">File</label>
                     <input
@@ -271,7 +276,7 @@ export function DocumentsPage({ user, searchQuery = "" }) {
                   type="button"
                   style={btnStyle}
                   onClick={handleUpload}
-                  disabled={!docName || !docFile}
+                  disabled={!docName || !docFile || !docType}
                 >
                   Upload Document
                 </button>
@@ -281,7 +286,6 @@ export function DocumentsPage({ user, searchQuery = "" }) {
         </div>
       )}
 
-      {/* Styles */}
       <style>
         {`
           .table {
@@ -309,7 +313,6 @@ export function DocumentsPage({ user, searchQuery = "" }) {
   );
 }
 
-/* Shared button style */
 const btnStyle = {
   background: "transparent",
   border: "1px solid #ccc",
